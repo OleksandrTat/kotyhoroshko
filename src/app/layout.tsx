@@ -1,9 +1,8 @@
 import './globals.css'
-import '../styles/animations.css'
 
 export const metadata = {
-  title: 'Інтерактивна казка — Котигорошко',
-  description: 'Багатошарова інтерактивна казка',
+  title: 'Котигорошко — Інтерактивна казка',
+  description: 'Зануртесь у чарівний світ української народної казки',
 }
 
 export default function RootLayout({
@@ -13,7 +12,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="uk">
-      <body className="bg-black text-white overflow-hidden">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Marck+Script&family=Philosopher:wght@400;700&display=swap" rel="stylesheet" />
+      </head>
+      <body className="bg-black text-white overflow-hidden antialiased">
         {children}
       </body>
     </html>
