@@ -9,76 +9,99 @@ export default function Scene1Page() {
   const [textVisible, setTextVisible] = useState(false)
 
   useEffect(() => {
-    // Mostrar texto con delay para efecto dramático
-    const timer = setTimeout(() => setTextVisible(true), 800)
+    const timer = setTimeout(() => setTextVisible(true), 1000)
     return () => clearTimeout(timer)
   }, [])
 
   return (
     <SceneContainer>
-      {/* Background */}
+      {/* Background Layer */}
       <SceneLayer
         src="/scenes/scene-1/background.jpeg"
-        alt="Інтерʼєр української хати"
-        className="scale-105 animate-ken-burns"
+        alt="Інтер'єр української хати"
+        className="scale-110 animate-ken-burns"
       />
 
-      {/* Overlay sutil para mejor legibilidad */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40"></div>
+      {/* Dark overlay for better text readability */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/50"></div>
 
-      {/* Foreground (персонажі + стіл) */}
+      {/* Foreground Layer (characters + table) */}
       <SceneLayer
         src="/scenes/scene-1/foreground.png"
         alt="Родина за столом"
-        className="animate-fade-in-slow hover:scale-[1.02] transition-transform duration-700"
+        className="animate-fade-in-slow hover:scale-[1.01] transition-transform duration-1000"
       />
 
-      {/* Efectos de ambiente - rayos de luz */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-1 h-full bg-gradient-to-b from-amber-400/20 via-amber-400/5 to-transparent blur-xl animate-pulse-slow"></div>
-        <div className="absolute top-0 right-1/3 w-1 h-full bg-gradient-to-b from-amber-300/15 via-amber-300/3 to-transparent blur-xl animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+      {/* Atmospheric light rays */}
+      <div className="absolute inset-0 pointer-events-none opacity-40">
+        <div className="absolute top-0 left-1/4 w-2 h-full bg-gradient-to-b from-amber-400/30 via-amber-400/10 to-transparent blur-2xl animate-pulse-slow"></div>
+        <div className="absolute top-0 right-1/3 w-2 h-full bg-gradient-to-b from-yellow-300/20 via-yellow-300/5 to-transparent blur-2xl animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      {/* Indicador de escena */}
-      <div className="absolute top-6 left-6 flex items-center gap-3 animate-fade-in">
-        <div className="w-10 h-10 rounded-full bg-amber-500/20 backdrop-blur-md border border-amber-400/30 flex items-center justify-center">
-          <span className="text-amber-300 font-bold" style={{ fontFamily: "'Philosopher', sans-serif" }}>1</span>
-        </div>
-        <div className="text-amber-200/80 text-sm" style={{ fontFamily: "'Philosopher', sans-serif" }}>
-          Початок історії
-        </div>
-      </div>
-
-      {/* Текст сцены mejorado */}
-      <div className={`absolute top-20 left-1/2 -translate-x-1/2 max-w-4xl w-full px-6 transition-all duration-1000 ${textVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
+      {/* Scene indicator badge */}
+      <div className="absolute top-8 left-8 flex items-center gap-4 animate-fade-in z-20">
         <div className="relative">
-          {/* Borde decorativo superior */}
-          <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-amber-400/60 to-transparent"></div>
+          <div className="absolute inset-0 bg-amber-500/30 blur-xl animate-pulse-slow"></div>
+          <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-amber-500/30 to-orange-500/30 backdrop-blur-md border-2 border-amber-400/40 flex items-center justify-center shadow-lg">
+            <span className="text-2xl font-bold text-amber-300" style={{ fontFamily: "'Philosopher', sans-serif" }}>1</span>
+          </div>
+        </div>
+        <div className="backdrop-blur-sm bg-black/20 px-4 py-2 rounded-full border border-amber-400/20">
+          <span className="text-amber-200/90 text-sm font-medium" style={{ fontFamily: "'Philosopher', sans-serif" }}>
+            Початок історії
+          </span>
+        </div>
+      </div>
+
+      {/* Story text panel */}
+      <div 
+        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-4xl w-full px-6 transition-all duration-1000 z-10 ${
+          textVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+        }`}
+      >
+        <div className="relative">
+          {/* Top decorative border */}
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex items-center gap-2">
+            <div className="w-20 h-px bg-gradient-to-r from-transparent via-amber-400/70 to-transparent"></div>
+            <div className="w-2 h-2 rounded-full bg-amber-400/70 animate-pulse-slow"></div>
+            <div className="w-20 h-px bg-gradient-to-l from-transparent via-amber-400/70 to-transparent"></div>
+          </div>
           
-          <div className="rounded-3xl bg-gradient-to-br from-slate-900/95 to-purple-900/95 backdrop-blur-xl border border-amber-400/20 shadow-2xl shadow-black/50 p-8">
-            <p className="text-xl md:text-2xl leading-relaxed text-center text-amber-50"
-               style={{ fontFamily: "'Philosopher', sans-serif" }}>
-              Жили колись чоловік із жінкою.<br />
-              І було в них семеро синів та одна дочка.
+          {/* Text container */}
+          <div className="relative rounded-3xl bg-gradient-to-br from-slate-900/95 via-purple-950/95 to-slate-900/95 backdrop-blur-2xl border-2 border-amber-400/30 shadow-2xl shadow-black/60 p-10 md:p-12">
+            {/* Inner glow */}
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-amber-500/5 via-transparent to-orange-500/5 pointer-events-none"></div>
+            
+            <p 
+              className="relative text-2xl md:text-3xl leading-relaxed text-center text-amber-50/95 font-medium"
+              style={{ fontFamily: "'Philosopher', sans-serif" }}
+            >
+              Жили колись чоловік із жінкою.
+              <br />
+              <span className="text-amber-200/80">І було в них семеро синів та одна дочка.</span>
             </p>
           </div>
           
-          {/* Borde decorativo inferior */}
-          <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-amber-400/60 to-transparent"></div>
+          {/* Bottom decorative border */}
+          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2">
+            <div className="w-20 h-px bg-gradient-to-r from-transparent via-amber-400/70 to-transparent"></div>
+            <div className="w-2 h-2 rounded-full bg-amber-400/70 animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
+            <div className="w-20 h-px bg-gradient-to-l from-transparent via-amber-400/70 to-transparent"></div>
+          </div>
         </div>
       </div>
 
-      {/* Barra de progreso */}
-      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/40">
-        <div className="h-full bg-gradient-to-r from-amber-500 to-orange-500 w-[10%] shadow-lg shadow-amber-500/50 animate-progress"></div>
+      {/* Progress bar */}
+      <div className="absolute bottom-0 left-0 right-0 h-2 bg-black/50 backdrop-blur-sm z-20">
+        <div className="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 shadow-lg shadow-amber-500/50 animate-progress" style={{ width: '10%' }}></div>
       </div>
 
-      {/* Kнопка переходу mejorada */}
+      {/* Next button */}
       <NextButton nextSceneId={2} />
 
-      {/* Hint de navegación */}
-      <div className="absolute bottom-24 right-6 text-amber-300/60 text-sm animate-bounce-slow">
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {/* Navigation hint */}
+      <div className="absolute bottom-32 right-8 text-amber-300/60 text-sm animate-bounce-slow z-20">
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </div>

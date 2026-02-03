@@ -12,7 +12,6 @@ export function NextButton({ nextSceneId }: Props) {
   const [isHovered, setIsHovered] = useState(false)
 
   const handleClick = () => {
-    // Pequeña vibración si está disponible
     if (typeof window !== 'undefined' && 'vibrate' in navigator) {
       navigator.vibrate(10)
     }
@@ -24,25 +23,36 @@ export function NextButton({ nextSceneId }: Props) {
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="group absolute bottom-8 right-8 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-4 text-lg font-semibold text-white shadow-2xl shadow-amber-900/50 transition-all duration-300 hover:scale-105 hover:shadow-amber-900/70 active:scale-95 animate-fade-in-delayed border border-amber-400/30"
+      className="group absolute bottom-10 right-10 z-30 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 px-10 py-5 text-xl font-bold text-white shadow-2xl shadow-amber-900/60 transition-all duration-500 hover:scale-110 hover:shadow-amber-900/80 active:scale-95 border-2 border-amber-400/40 overflow-hidden bg-[length:200%_100%] hover:bg-[position:100%_0]"
       style={{ fontFamily: "'Philosopher', sans-serif" }}
+      aria-label="Перейти до наступної сцени"
     >
-      <span className="relative z-10">Далі</span>
+      {/* Background glow effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-300/20 to-amber-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+      
+      {/* Shimmer effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+      
+      <span className="relative z-10 drop-shadow-lg">Далі</span>
       
       <svg 
-        className={`w-5 h-5 relative z-10 transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`} 
+        className={`w-6 h-6 relative z-10 transition-all duration-300 drop-shadow-lg ${
+          isHovered ? 'translate-x-2 scale-110' : ''
+        }`} 
         fill="none" 
         stroke="currentColor" 
         viewBox="0 0 24 24"
       >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        <path 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          strokeWidth={3} 
+          d="M13 7l5 5m0 0l-5 5m5-5H6" 
+        />
       </svg>
 
-      {/* Efecto de brillo al hover */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-      
-      {/* Pulso sutil */}
-      <div className="absolute inset-0 rounded-2xl bg-amber-400/20 animate-ping-slow"></div>
+      {/* Pulse effect */}
+      <div className="absolute inset-0 rounded-2xl bg-amber-400/30 animate-ping-slow"></div>
     </button>
   )
 }
