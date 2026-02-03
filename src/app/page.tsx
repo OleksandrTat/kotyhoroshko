@@ -1,107 +1,123 @@
+﻿'use client'
+
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 export default function HomePage() {
+  const router = useRouter()
+  const [isExiting, setIsExiting] = useState(false)
+
+  const handleStart = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault()
+    if (isExiting) return
+    setIsExiting(true)
+    setTimeout(() => {
+      router.push('/scene/1')
+    }, 520)
+  }
+
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black">
-      {/* Animated background with better gradients */}
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#120b07]">
+      {/* Warm dusk glow */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-900/30 via-purple-900/20 to-transparent"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-orange-900/20 via-transparent to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#2a170b] via-[#120b07] to-black"></div>
+        <div className="absolute -top-24 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,225,174,0.25),transparent_60%)] blur-2xl"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(244,188,85,0.18),transparent_55%)]"></div>
       </div>
 
-      {/* Floating particles with better animation */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(8)].map((_, i) => (
-          <div
-            key={i}
-            className="particle"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: `${Math.random() * 4 + 2}px`,
-              height: `${Math.random() * 4 + 2}px`,
-              animationDelay: `${i * 2}s`,
-              animationDuration: `${25 + i * 3}s`,
-            }}
-          />
-        ))}
+      {/* Soft hills silhouette */}
+      <div className="absolute bottom-0 left-0 right-0 h-[45vh]">
+        <div
+          className="absolute inset-x-0 bottom-0 h-[60%] bg-[#2a170b]"
+          style={{
+            clipPath:
+              'polygon(0 100%, 0 60%, 6% 56%, 12% 62%, 20% 52%, 28% 64%, 36% 55%, 44% 65%, 52% 54%, 60% 66%, 68% 56%, 76% 64%, 84% 54%, 92% 60%, 100% 56%, 100% 100%)',
+          }}
+        ></div>
+        <div
+          className="absolute inset-x-0 bottom-0 h-[45%] bg-[#1d1209]"
+          style={{
+            clipPath:
+              'polygon(0 100%, 0 70%, 8% 68%, 16% 74%, 24% 66%, 32% 76%, 40% 68%, 48% 78%, 56% 66%, 64% 78%, 72% 68%, 80% 76%, 88% 70%, 96% 74%, 100% 68%, 100% 100%)',
+          }}
+        ></div>
+      </div>
+
+      {/* Candle mist */}
+      <div className="absolute inset-x-0 bottom-0 h-[40vh] pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(244,188,85,0.12),transparent_70%)]"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-[#1a1009]/60 to-transparent"></div>
+        <div className="absolute bottom-6 left-1/4 h-24 w-72 rounded-full bg-[#f2c98a]/15 blur-2xl animate-float"></div>
+        <div className="absolute bottom-10 right-1/4 h-20 w-64 rounded-full bg-[#f2c98a]/10 blur-2xl animate-float" style={{ animationDelay: '1.5s' }}></div>
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 text-center space-y-12 px-6 max-w-4xl">
-        {/* Title section with improved effects */}
-        <div className="space-y-6">
-          <div className="inline-block relative">
-            {/* Glow effect behind title */}
-            <div className="absolute inset-0 blur-3xl bg-gradient-to-r from-amber-500/30 via-yellow-500/30 to-amber-500/30 animate-pulse-slow"></div>
-            
-            <h1 
-              className="relative text-7xl md:text-9xl font-bold bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-300 bg-clip-text text-transparent animate-shimmer bg-[length:200%_100%]"
-              style={{ 
-                fontFamily: "'Marck Script', cursive",
-                textShadow: '0 0 40px rgba(251, 191, 36, 0.3)',
-              }}
-            >
-              Котигорошко
-            </h1>
+      <div className="relative z-10 text-center space-y-10 px-6 max-w-5xl">
+        <div className="space-y-5">
+          <div className="inline-flex items-center gap-4 rounded-full border border-[#f2d4a4]/30 bg-[#2a170b]/50 px-6 py-2 text-[#f7efe4]/90 shadow-lg shadow-black/40">
+            <span className="text-sm tracking-[0.3em] uppercase">Cuento al calor del hogar</span>
           </div>
-          
-          {/* Decorative line */}
+
+          <h1
+            className="text-6xl md:text-8xl font-bold bg-gradient-to-r from-[#fce8c8] via-[#f4bc55] to-[#fce8c8] bg-clip-text text-transparent animate-shimmer bg-[length:200%_100%]"
+            style={{
+              fontFamily: "'Marck Script', cursive",
+              textShadow: '0 0 40px rgba(244, 188, 85, 0.25)',
+            }}
+          >
+            Kotyhoroshko
+          </h1>
+
           <div className="flex items-center justify-center gap-4">
-            <div className="h-px w-24 bg-gradient-to-r from-transparent via-amber-500/60 to-transparent"></div>
-            <div className="w-3 h-3 rounded-full bg-amber-500/60 animate-pulse-slow"></div>
-            <div className="h-px w-24 bg-gradient-to-l from-transparent via-amber-500/60 to-transparent"></div>
+            <div className="h-px w-20 bg-gradient-to-r from-transparent via-[#f2d4a4]/70 to-transparent"></div>
+            <div className="w-3 h-3 rotate-45 bg-[#f2d4a4]/80 shadow-sm shadow-[#f2d4a4]/40"></div>
+            <div className="h-px w-20 bg-gradient-to-l from-transparent via-[#f2d4a4]/70 to-transparent"></div>
           </div>
-          
-          <p 
-            className="text-3xl md:text-4xl text-amber-100/90 font-medium animate-fade-in-up"
-            style={{ 
+
+          <p
+            className="text-2xl md:text-3xl text-[#f7efe4]/90 font-medium animate-fade-in-up"
+            style={{
               fontFamily: "'Philosopher', sans-serif",
               animationDelay: '0.3s',
               opacity: 0,
             }}
           >
-            Українська народна казка
+            Un cuento popular ucraniano, contado con luz suave y corazón cálido
           </p>
         </div>
 
-        {/* Description with better spacing */}
-        <p 
-          className="text-xl md:text-2xl text-gray-300/90 max-w-2xl mx-auto leading-relaxed animate-fade-in-up"
-          style={{ 
+        <p
+          className="text-lg md:text-xl text-[#f1e4d3]/90 max-w-3xl mx-auto leading-relaxed animate-fade-in-up"
+          style={{
             fontFamily: "'Philosopher', sans-serif",
             animationDelay: '0.6s',
             opacity: 0,
           }}
         >
-          Зануртесь у чарівний світ давньої легенди про хороброго героя,
-          <br className="hidden md:block" />
-          який народився з магічної горошини
+          Entra en una historia de hogares sencillos, caminos de trigo y un héroe nacido de una
+          semilla mágica. Todo empieza con un silencio que se transforma en destino.
         </p>
 
-        {/* Improved button */}
-        <div 
-          className="pt-6 animate-fade-in-up" 
-          style={{ 
+        <div
+          className="pt-4 animate-fade-in-up"
+          style={{
             animationDelay: '0.9s',
             opacity: 0,
           }}
         >
           <Link
             href="/scene/1"
-            className="group relative inline-flex items-center gap-4 rounded-2xl bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 px-12 py-6 text-xl md:text-2xl font-bold text-white shadow-2xl shadow-amber-900/60 transition-all duration-500 hover:scale-105 hover:shadow-amber-900/80 active:scale-95 bg-[length:200%_100%] hover:bg-[position:100%_0] overflow-hidden"
+            onClick={handleStart}
+            className="group relative inline-flex items-center gap-4 rounded-xl border border-[#f2d4a4]/40 bg-gradient-to-r from-[#d29a5e] via-[#e6b87a] to-[#d29a5e] px-10 py-5 text-xl md:text-2xl font-bold text-[#2a170b] shadow-2xl shadow-black/60 transition-all duration-500 hover:scale-[1.03] hover:border-[#f9e1b5]/80 overflow-hidden"
             style={{ fontFamily: "'Philosopher', sans-serif" }}
           >
-            {/* Shimmer effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
-            
-            <span className="relative z-10">Почати подорож</span>
-            
-            <svg 
-              className="w-7 h-7 relative z-10 transition-transform duration-300 group-hover:translate-x-2" 
-              fill="none" 
-              stroke="currentColor" 
+            <span className="absolute inset-0 rounded-xl bg-[linear-gradient(120deg,transparent,rgba(255,255,255,0.25),transparent)] translate-x-[-120%] group-hover:translate-x-[120%] transition-transform duration-1000"></span>
+            <span className="relative z-10">Abrir el portal</span>
+            <svg
+              className="w-7 h-7 relative z-10 transition-transform duration-300 group-hover:translate-x-2"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -109,24 +125,29 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {/* Additional decorative element */}
-        <div 
-          className="pt-12 animate-fade-in-up" 
-          style={{ 
+        <div
+          className="pt-8 animate-fade-in-up"
+          style={{
             animationDelay: '1.2s',
             opacity: 0,
           }}
         >
-          <div className="flex items-center justify-center gap-3 text-amber-400/70 text-base">
-            <div className="h-px w-16 bg-gradient-to-r from-transparent to-amber-400/60"></div>
-            <span style={{ fontFamily: "'Philosopher', sans-serif" }}>Інтерактивна історія</span>
-            <div className="h-px w-16 bg-gradient-to-l from-transparent to-amber-400/60"></div>
+          <div className="inline-flex items-center gap-3 text-[#f2d4a4]/70 text-sm tracking-widest uppercase">
+            <span className="h-px w-12 bg-gradient-to-r from-transparent to-[#f2d4a4]/60"></span>
+            Historia interactiva
+            <span className="h-px w-12 bg-gradient-to-l from-transparent to-[#f2d4a4]/60"></span>
           </div>
         </div>
       </div>
 
-      {/* Vignette effect */}
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.6)_100%)]"></div>
+      {/* Vignette */}
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_transparent_0%,_rgba(0,0,0,0.65)_100%)]"></div>
+
+      {isExiting ? (
+        <div className="fixed inset-0 z-[90] pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(44,28,16,0.95),rgba(12,8,5,0.98))] animate-veil-in"></div>
+        </div>
+      ) : null}
     </main>
   )
 }
