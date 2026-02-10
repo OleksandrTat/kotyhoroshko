@@ -6,6 +6,30 @@
   --color-accent: 255 225 174;
 }
 
+:root {
+  --story-text-size: clamp(1.05rem, 1.15vw + 0.9rem, 1.6rem);
+  --story-line-height: 1.7;
+  --story-panel-radius: 1.5rem;
+  --story-panel-bg: linear-gradient(135deg, rgba(42, 23, 11, 0.92) 0%, rgba(31, 18, 9, 0.95) 55%, rgba(42, 23, 11, 0.92) 100%);
+  --story-panel-border: rgba(242, 212, 164, 0.25);
+  --story-panel-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+[data-text-size="large"] {
+  --story-text-size: clamp(1.2rem, 1.3vw + 1rem, 1.9rem);
+}
+
+[data-text-size="xlarge"] {
+  --story-text-size: clamp(1.35rem, 1.5vw + 1.05rem, 2.15rem);
+}
+
+[data-reading="on"] {
+  --story-line-height: 1.78;
+  --story-panel-bg: linear-gradient(135deg, rgba(26, 14, 7, 0.97) 0%, rgba(16, 9, 5, 0.98) 100%);
+  --story-panel-border: rgba(248, 226, 186, 0.35);
+  --story-panel-shadow: 0 26px 60px rgba(0, 0, 0, 0.7);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -326,4 +350,58 @@ button, a, .interactive {
     0 6px 12px rgba(0, 0, 0, 0.18),
     0 14px 24px rgba(0, 0, 0, 0.22),
     0 26px 44px rgba(0, 0, 0, 0.28);
+}
+
+.story-panel-wrap {
+  max-width: 40rem;
+}
+
+@media (min-width: 768px) {
+  .story-panel-wrap {
+    max-width: 42rem;
+  }
+}
+
+[data-reading="on"] .story-panel-wrap {
+  max-width: 48rem;
+}
+
+.story-panel {
+  background: var(--story-panel-bg);
+  border: 1px solid var(--story-panel-border);
+  border-radius: var(--story-panel-radius);
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+  box-shadow: var(--story-panel-shadow);
+}
+
+.story-text {
+  font-size: var(--story-text-size);
+  line-height: var(--story-line-height);
+  letter-spacing: 0.01em;
+  text-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.parallax-root {
+  --parallax-x-s: 0px;
+  --parallax-y-s: 0px;
+  --parallax-x-m: 0px;
+  --parallax-y-m: 0px;
+  --parallax-x-l: 0px;
+  --parallax-y-l: 0px;
+}
+
+.parallax-layer-back {
+  transform: translate3d(var(--parallax-x-s), var(--parallax-y-s), 0) scale(1.05);
+  will-change: transform;
+}
+
+.parallax-layer-mid {
+  transform: translate3d(var(--parallax-x-m), var(--parallax-y-m), 0) scale(1.02);
+  will-change: transform;
+}
+
+.parallax-layer-front {
+  transform: translate3d(var(--parallax-x-l), var(--parallax-y-l), 0) scale(1);
+  will-change: transform;
 }

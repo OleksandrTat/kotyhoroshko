@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 type Props = {
   nextSceneId: number
@@ -12,7 +12,7 @@ export function NextButton({ nextSceneId }: Props) {
   const [isHovered, setIsHovered] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     if (isExiting) return
     if (typeof window !== 'undefined' && 'vibrate' in navigator) {
       navigator.vibrate(10)
@@ -21,7 +21,23 @@ export function NextButton({ nextSceneId }: Props) {
     setTimeout(() => {
       router.push(`/scene/${nextSceneId}`)
     }, 520)
-  }
+  }, [isExiting, nextSceneId, router])
+
+  useEffect(() => {
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.repeat || event.altKey || event.ctrlKey || event.metaKey) return
+      const key = event.key
+      const target = event.target as HTMLElement | null
+      if (target && target.closest('button, a, input, textarea, select')) return
+      if (key === 'ArrowRight' || key === 'Enter' || key === ' ') {
+        event.preventDefault()
+        handleClick()
+      }
+    }
+
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [handleClick])
 
   return (
     <>
@@ -29,9 +45,13 @@ export function NextButton({ nextSceneId }: Props) {
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className="group absolute bottom-10 right-10 z-30 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#d29a5e] via-[#e6b87a] to-[#d29a5e] px-10 py-5 text-xl font-bold text-[#2a170b] shadow-2xl shadow-black/50 transition-all duration-500 hover:scale-110 active:scale-95 border border-white/20 overflow-hidden"
+        className="group absolute bottom-[calc(2.5rem+env(safe-area-inset-bottom))] right-[calc(2.5rem+env(safe-area-inset-right))] z-30 flex items-center gap-3 rounded-2xl bg-gradient-to-r from-[#d29a5e] via-[#e6b87a] to-[#d29a5e] px-10 py-5 text-xl font-bold text-[#2a170b] shadow-2xl shadow-black/50 transition-all duration-500 hover:scale-110 active:scale-95 border border-white/20 overflow-hidden disabled:cursor-not-allowed disabled:opacity-75"
         style={{ fontFamily: "'Philosopher', sans-serif" }}
-        aria-label="Ir a la siguiente escena"
+        aria-label="Ir a la siguiente escena (flecha derecha o Enter)"
+        aria-keyshortcuts="ArrowRight Enter Space"
+        title="Continuar (→ o Enter)"
+        disabled={isExiting}
+        type="button"
       >
         <div className="absolute inset-0 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,0.25),transparent)] translate-x-[-120%] group-hover:translate-x-[120%] transition-transform duration-900"></div>
 

@@ -61,7 +61,7 @@ export default function Scene1Page() {
       </div>
 
       {/* Scene indicator badge */}
-      <div className="absolute top-8 left-8 flex items-center gap-4 animate-fade-in z-40">
+      <div className="absolute top-[calc(1.5rem+env(safe-area-inset-top))] left-[calc(1.5rem+env(safe-area-inset-left))] flex items-center gap-4 animate-fade-in z-40">
         <div className="relative">
           <div className="absolute inset-0 bg-[#f4bc55]/30 blur-xl animate-pulse-slow"></div>
           <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-[#d29a5e]/50 to-[#e6b87a]/30 backdrop-blur-md border-2 border-[#f2d4a4]/40 flex items-center justify-center shadow-lg">
@@ -77,7 +77,7 @@ export default function Scene1Page() {
 
       {/* Story text panel */}
       <div
-        className={`absolute bottom-24 left-12 right-12 md:left-16 md:right-auto md:max-w-2xl w-auto px-4 transition-all duration-1000 z-30 ${
+        className={`story-panel-wrap absolute bottom-[calc(7rem+env(safe-area-inset-bottom))] md:bottom-[calc(6rem+env(safe-area-inset-bottom))] left-4 right-4 sm:left-8 sm:right-8 md:left-16 md:right-auto w-auto px-2 sm:px-4 transition-all duration-1000 z-30 ${
           textVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         }`}
       >
@@ -88,11 +88,11 @@ export default function Scene1Page() {
             <div className="w-16 h-px bg-gradient-to-l from-transparent via-[#f2d4a4]/70 to-transparent"></div>
           </div>
 
-          <div className="relative rounded-2xl bg-gradient-to-br from-[#2a170b]/90 via-[#1f1209]/92 to-[#2a170b]/90 backdrop-blur-xl border border-[#f2d4a4]/25 shadow-2xl shadow-black/70 p-6 md:p-8">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#f8e2ba]/10 via-transparent to-[#f4bc55]/10 pointer-events-none"></div>
+          <div className="relative story-panel p-6 md:p-8">
+            <div className="absolute inset-0 rounded-[1.5rem] bg-gradient-to-br from-[#f8e2ba]/10 via-transparent to-[#f4bc55]/10 pointer-events-none"></div>
 
             <p
-              className="relative text-xl md:text-2xl leading-relaxed text-left text-[#f7efe4]/95 font-medium"
+              className="relative story-text text-left text-[#f7efe4]/95 font-medium"
               style={{ fontFamily: "'Philosopher', sans-serif" }}
             >
               Erase una vez un hombre y su esposa.
@@ -114,6 +114,11 @@ export default function Scene1Page() {
         <div
           className="h-full bg-gradient-to-r from-[#d29a5e] via-[#f4bc55] to-[#d29a5e] shadow-lg shadow-black/40 animate-progress"
           style={{ width: '10%' }}
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={10}
+          aria-label="Progreso de la historia"
         ></div>
       </div>
 
@@ -121,7 +126,7 @@ export default function Scene1Page() {
       <NextButton nextSceneId={2} />
 
       {/* Navigation hint */}
-      <div className="absolute bottom-32 right-8 text-[#f2d4a4]/70 text-sm animate-bounce-slow z-20">
+      <div className="absolute bottom-[calc(8rem+env(safe-area-inset-bottom))] right-[calc(1.5rem+env(safe-area-inset-right))] text-[#f2d4a4]/70 text-sm animate-bounce-slow z-20">
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>

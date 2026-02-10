@@ -18,7 +18,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#120b07]">
+    <main className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-[#120b07]">
       {/* Warm dusk glow */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-b from-[#2a170b] via-[#120b07] to-black"></div>
