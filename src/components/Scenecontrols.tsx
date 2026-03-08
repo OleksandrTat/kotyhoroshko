@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 
@@ -9,53 +9,58 @@ export function SceneControls() {
 
   return (
     <>
-      {/* Кнопка меню */}
       <button
-        onClick={() => setMenuOpen(!menuOpen)}
-        className="w-12 h-12 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-slate-800/90 transition-all duration-300 hover:scale-110"
-        title="Налаштування"
+        onClick={() => setMenuOpen((value) => !value)}
+        className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-slate-900/80 text-white/70 backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-slate-800/90 hover:text-white"
+        title="Ajustes"
       >
-        <svg className={`w-6 h-6 transition-transform duration-300 ${menuOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <svg
+          className={`h-6 w-6 transition-transform duration-300 ${menuOpen ? 'rotate-90' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
         </svg>
       </button>
 
-      {/* Панель керування */}
-      <div className={`absolute top-20 right-6 w-72 rounded-2xl bg-slate-950/95 backdrop-blur-xl border border-white/10 shadow-2xl transition-all duration-300 ${menuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
-        <div className="p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-slate-200 mb-4" style={{ fontFamily: "'Philosopher', sans-serif" }}>
-            Налаштування
+      <div className={`absolute right-6 top-20 w-72 rounded-2xl border border-white/10 bg-slate-950/95 shadow-2xl backdrop-blur-xl transition-all duration-300 ${menuOpen ? 'pointer-events-auto translate-y-0 opacity-100' : 'pointer-events-none -translate-y-4 opacity-0'}`}>
+        <div className="space-y-4 p-6">
+          <h3 className="mb-4 text-lg font-semibold text-slate-200" style={{ fontFamily: 'var(--font-body)' }}>
+            Ajustes
           </h3>
 
-          {/* Керування звуком */}
           <div className="flex items-center justify-between">
-            <span className="text-white/80" style={{ fontFamily: "'Philosopher', sans-serif" }}>Звук</span>
+            <span className="text-white/80" style={{ fontFamily: 'var(--font-body)' }}>
+              Sonido
+            </span>
             <button
-              onClick={() => setSoundEnabled(!soundEnabled)}
-              className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${soundEnabled ? 'bg-slate-400' : 'bg-slate-700'}`}
+              onClick={() => setSoundEnabled((value) => !value)}
+              className={`relative h-7 w-14 rounded-full transition-colors duration-300 ${soundEnabled ? 'bg-slate-400' : 'bg-slate-700'}`}
             >
-              <div className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 ${soundEnabled ? 'translate-x-7' : 'translate-x-0'}`}></div>
+              <div className={`absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow-md transition-transform duration-300 ${soundEnabled ? 'translate-x-7' : 'translate-x-0'}`} />
             </button>
           </div>
 
-          {/* Автовідтворення */}
           <div className="flex items-center justify-between">
-            <span className="text-white/80" style={{ fontFamily: "'Philosopher', sans-serif" }}>Автовідтворення</span>
+            <span className="text-white/80" style={{ fontFamily: 'var(--font-body)' }}>
+              Reproducción automática
+            </span>
             <button
-              onClick={() => setAutoPlay(!autoPlay)}
-              className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${autoPlay ? 'bg-slate-400' : 'bg-slate-700'}`}
+              onClick={() => setAutoPlay((value) => !value)}
+              className={`relative h-7 w-14 rounded-full transition-colors duration-300 ${autoPlay ? 'bg-slate-400' : 'bg-slate-700'}`}
             >
-              <div className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-300 ${autoPlay ? 'translate-x-7' : 'translate-x-0'}`}></div>
+              <div className={`absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow-md transition-transform duration-300 ${autoPlay ? 'translate-x-7' : 'translate-x-0'}`} />
             </button>
           </div>
 
-          <div className="pt-4 border-t border-white/10">
+          <div className="border-t border-white/10 pt-4">
             <button
-              className="w-full py-2 px-4 rounded-lg bg-slate-700/20 hover:bg-slate-700/30 text-slate-200 transition-colors duration-300 text-sm"
-              style={{ fontFamily: "'Philosopher', sans-serif" }}
+              className="w-full rounded-lg bg-slate-700/20 px-4 py-2 text-sm text-slate-200 transition-colors duration-300 hover:bg-slate-700/30"
+              style={{ fontFamily: 'var(--font-body)' }}
             >
-              Повернутися на головну
+              Volver al inicio
             </button>
           </div>
         </div>

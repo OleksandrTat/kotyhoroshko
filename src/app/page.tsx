@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { navigateWithPageTurn } from '@/lib/pageTurn'
 
-const HIGHLIGHTS = ['Живі ілюстрації', 'Мʼякий ритм читання', 'Класична казка по сценах']
+const HIGHLIGHTS = ['28 escenas ilustradas', 'Ritmo de lectura inmersivo', 'Cuento popular ucraniano']
 
 export default function HomePage() {
   const router = useRouter()
@@ -43,22 +43,23 @@ export default function HomePage() {
         <div className="relative text-center">
           <div className="animate-fade-in-up inline-flex items-center gap-3 rounded-full border border-[rgba(var(--color-accent),0.34)] bg-[rgba(var(--color-secondary),0.34)] px-4 py-2 text-xs uppercase tracking-[0.25em] text-[rgba(var(--color-accent),0.88)] sm:text-sm">
             <span className="animate-pulse-slow h-2 w-2 rounded-full bg-[rgba(var(--color-accent),0.95)]" />
-            Українська народна казка
+            Cuento popular ucraniano
             <span className="animate-pulse-slow h-2 w-2 rounded-full bg-[rgba(var(--color-accent),0.95)]" style={{ animationDelay: '0.8s' }} />
           </div>
 
           <h1
             className="text-gradient animate-shimmer mt-6 bg-[length:220%_100%] text-6xl leading-none sm:text-7xl md:text-8xl"
-            style={{ fontFamily: "'Marck Script', cursive" }}
+            style={{ fontFamily: 'var(--font-display)' }}
           >
-            Котигорошко
+            Kotyhoroshko
           </h1>
 
           <p
             className="animate-fade-in-up mx-auto mt-5 max-w-3xl text-xl text-[rgba(var(--color-accent),0.9)] sm:text-2xl md:text-3xl"
-            style={{ fontFamily: "'Philosopher', sans-serif", animationDelay: '0.2s', opacity: 0 }}
+            style={{ fontFamily: 'var(--font-body)', animationDelay: '0.2s', opacity: 0 }}
           >
-            Вечірня оповідь про родину, силу та дорогу героя, що народився з чарівної горошини.
+            Una reinterpretación visual del cuento sobre el héroe nacido de un guisante mágico que sale a rescatar a
+            su familia.
           </p>
 
           <div
@@ -69,7 +70,7 @@ export default function HomePage() {
               <span
                 key={item}
                 className="rounded-full border border-[rgba(var(--color-accent),0.34)] bg-[rgba(var(--color-secondary),0.26)] px-4 py-2 text-sm text-[rgba(var(--color-accent),0.9)] sm:text-base"
-                style={{ fontFamily: "'Philosopher', sans-serif" }}
+                style={{ fontFamily: 'var(--font-body)' }}
               >
                 {item}
               </span>
@@ -80,15 +81,15 @@ export default function HomePage() {
             <Link
               href="/scene/1"
               onClick={handleStart}
-              aria-label="Почати історію з першої сцени"
+              aria-label="Empezar la historia desde la primera escena"
               aria-disabled={isNavigating}
               className={`btn-glow group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl border border-[rgba(var(--color-accent),0.52)] bg-[linear-gradient(125deg,rgba(var(--color-secondary),0.95),rgba(var(--color-primary),0.97),rgba(var(--color-secondary),0.95))] px-8 py-4 text-xl font-bold text-[#2a170b] shadow-2xl shadow-black/55 transition-all duration-300 hover:scale-[1.03] hover:border-[rgba(var(--color-accent),0.78)] sm:px-10 sm:py-5 sm:text-2xl ${
                 isNavigating ? 'pointer-events-none opacity-75' : ''
               }`}
-              style={{ fontFamily: "'Philosopher', sans-serif" }}
+              style={{ fontFamily: 'var(--font-body)' }}
             >
               <span className="absolute inset-0 translate-x-[-125%] bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.3),transparent)] transition-transform duration-700 group-hover:translate-x-[125%]" />
-              <span className="relative z-10">Почати мандрівку</span>
+              <span className="relative z-10">Empezar la historia</span>
               <svg
                 className="relative z-10 h-6 w-6 transition-transform duration-300 group-hover:translate-x-1.5 sm:h-7 sm:w-7"
                 fill="none"
@@ -105,7 +106,7 @@ export default function HomePage() {
             className="animate-fade-in-up mt-6 text-xs uppercase tracking-[0.22em] text-[rgba(var(--color-accent),0.72)] sm:text-sm"
             style={{ animationDelay: '0.68s', opacity: 0 }}
           >
-            Натисни, щоб відкрити першу сцену
+            Pulsa para abrir la primera escena
           </p>
         </div>
       </section>

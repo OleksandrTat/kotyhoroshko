@@ -5,8 +5,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { navigateWithPageTurn } from '@/lib/pageTurn'
 
 type Props = {
-  nextSceneId: number
+  nextSceneId?: number
+  href?: string
   label?: string
+  direction?: 'forward' | 'backward'
 }
 
 const ACTIVATION_KEYS = new Set(['ArrowRight', 'Enter', ' '])
@@ -15,22 +17,30 @@ function isInteractiveTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) {
     return false
   }
-  return Boolean(
-    target.closest('button, a, input, textarea, select, [contenteditable="true"]'),
-  )
+
+  return Boolean(target.closest('button, a, input, textarea, select, [contenteditable="true"]'))
 }
 
-export function NextButton({ nextSceneId, label = 'Продовжити' }: Props) {
+export function NextButton({
+  nextSceneId,
+  href,
+  label = 'Continuar',
+  direction = 'forward',
+}: Props) {
   const router = useRouter()
   const [isNavigating, setIsNavigating] = useState(false)
-  const nextScenePath = `/scene/${nextSceneId}`
+  const targetPath = href ?? (typeof nextSceneId === 'number' ? `/scene/${nextSceneId}` : null)
 
   useEffect(() => {
-    router.prefetch(nextScenePath)
-  }, [nextScenePath, router])
+    if (!targetPath) {
+      return
+    }
+
+    router.prefetch(targetPath)
+  }, [targetPath, router])
 
   const handleNavigate = useCallback(() => {
-    if (isNavigating) {
+    if (isNavigating || !targetPath) {
       return
     }
 
@@ -40,9 +50,9 @@ export function NextButton({ nextSceneId, label = 'Продовжити' }: Prop
 
     setIsNavigating(true)
     navigateWithPageTurn(() => {
-      router.push(nextScenePath)
-    }, { direction: 'forward' })
-  }, [isNavigating, nextScenePath, router])
+      router.push(targetPath)
+    }, { direction })
+  }, [direction, isNavigating, router, targetPath])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -67,12 +77,16 @@ export function NextButton({ nextSceneId, label = 'Продовжити' }: Prop
   return (
     <button
       onClick={handleNavigate}
-      className="btn-glow group absolute bottom-[calc(2rem+env(safe-area-inset-bottom))] right-[calc(1.25rem+env(safe-area-inset-right))] z-40 inline-flex items-center gap-3 overflow-hidden rounded-2xl border border-[rgba(var(--color-accent),0.45)] bg-[linear-gradient(135deg,rgba(var(--color-secondary),0.95),rgba(var(--color-primary),0.96),rgba(var(--color-secondary),0.95))] px-8 py-4 text-lg font-bold text-[#2a170b] shadow-2xl shadow-black/55 transition-all duration-300 hover:scale-[1.04] hover:border-[rgba(var(--color-accent),0.75)] disabled:cursor-not-allowed disabled:opacity-75 sm:px-9 sm:py-4"
-      style={{ fontFamily: "'Philosopher', sans-serif" }}
-      aria-label="Перейти до наступної сцени"
+      className="btn-glow group absolute z-40 inline-flex items-center gap-3 overflow-hidden rounded-2xl border border-[rgba(var(--color-accent),0.45)] bg-[linear-gradient(135deg,rgba(var(--color-secondary),0.95),rgba(var(--color-primary),0.96),rgba(var(--color-secondary),0.95))] px-8 py-4 text-lg font-bold text-[#2a170b] shadow-2xl shadow-black/55 transition-all duration-300 hover:scale-[1.04] hover:border-[rgba(var(--color-accent),0.75)] disabled:cursor-not-allowed disabled:opacity-75 sm:px-9 sm:py-4"
+      style={{
+        bottom: 'calc(2rem + env(safe-area-inset-bottom))',
+        right: 'calc(1.25rem + env(safe-area-inset-right))',
+        fontFamily: 'var(--font-body)',
+      }}
+      aria-label={label}
       aria-keyshortcuts="ArrowRight Enter Space"
-      title="Продовжити (→, Enter, Space)"
-      disabled={isNavigating}
+      title={`${label} (→, Enter, Space)`}
+      disabled={isNavigating || !targetPath}
       type="button"
     >
       <span className="absolute inset-0 translate-x-[-120%] bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.28),transparent)] transition-transform duration-700 group-hover:translate-x-[120%]" />

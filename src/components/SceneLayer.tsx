@@ -25,6 +25,9 @@ export function SceneLayer({
   loop = true,
   playsInline = true,
 }: Props) {
+  const normalizedSrc = encodeURI(src)
+  const normalizedPoster = poster ? encodeURI(poster) : undefined
+
   if (media === 'video') {
     return (
       <video
@@ -34,10 +37,10 @@ export function SceneLayer({
         loop={loop}
         playsInline={playsInline}
         preload={priority ? 'auto' : 'metadata'}
-        poster={poster}
+        poster={normalizedPoster}
         aria-label={alt}
       >
-        <source src={src} type="video/mp4" />
+        <source src={normalizedSrc} type="video/mp4" />
       </video>
     )
   }
@@ -45,7 +48,7 @@ export function SceneLayer({
   return (
     <div className={`absolute inset-0 ${className}`}>
       <Image
-        src={src}
+        src={normalizedSrc}
         alt={alt}
         fill
         sizes="100vw"

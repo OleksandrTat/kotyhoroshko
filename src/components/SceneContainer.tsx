@@ -1,9 +1,9 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
-import { navigateWithPageTurn } from '@/lib/pageTurn'
+import { useRouter } from 'next/navigation'
 import { SceneTransition } from '@/components/SceneTransition'
+import { navigateWithPageTurn } from '@/lib/pageTurn'
 
 type Props = {
   children: React.ReactNode
@@ -12,9 +12,9 @@ type Props = {
 type TextSize = 'normal' | 'large' | 'xlarge'
 
 const TEXT_SIZE_OPTIONS: Array<{ id: TextSize; label: string; ariaLabel: string }> = [
-  { id: 'normal', label: 'A', ariaLabel: 'Звичайний розмір тексту' },
-  { id: 'large', label: 'A+', ariaLabel: 'Збільшений розмір тексту' },
-  { id: 'xlarge', label: 'A++', ariaLabel: 'Дуже великий розмір тексту' },
+  { id: 'normal', label: 'A', ariaLabel: 'Tamaño normal del texto' },
+  { id: 'large', label: 'A+', ariaLabel: 'Tamaño grande del texto' },
+  { id: 'xlarge', label: 'A++', ariaLabel: 'Tamaño muy grande del texto' },
 ]
 
 export function SceneContainer({ children }: Props) {
@@ -34,10 +34,6 @@ export function SceneContainer({ children }: Props) {
   }, [router])
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return
-    }
-
     const storedSize = window.localStorage.getItem('story-text-size')
     const storedReading = window.localStorage.getItem('story-reading-mode')
     const rafId = window.requestAnimationFrame(() => {
@@ -53,16 +49,10 @@ export function SceneContainer({ children }: Props) {
   }, [])
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return
-    }
     window.localStorage.setItem('story-text-size', textSize)
   }, [textSize])
 
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return
-    }
     window.localStorage.setItem('story-reading-mode', String(readingMode))
   }, [readingMode])
 
@@ -75,7 +65,7 @@ export function SceneContainer({ children }: Props) {
       delete root.dataset.textSize
       delete root.dataset.reading
     }
-  }, [textSize, readingMode])
+  }, [readingMode, textSize])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -103,16 +93,14 @@ export function SceneContainer({ children }: Props) {
       {children}
       <SceneTransition />
 
-      {readingMode ? (
-        <div className="pointer-events-none absolute inset-0 z-[25] bg-black/40 backdrop-blur-[1px]" />
-      ) : null}
+      {readingMode ? <div className="pointer-events-none absolute inset-0 z-[25] bg-black/40 backdrop-blur-[1px]" /> : null}
 
       <div className="absolute right-[calc(1.1rem+env(safe-area-inset-right))] top-[calc(1.1rem+env(safe-area-inset-top))] z-50 flex items-center gap-3">
         <button
           onClick={handleGoHome}
           className="glass-panel inline-flex h-12 w-12 items-center justify-center rounded-full text-[rgba(var(--color-accent),0.92)] transition-transform duration-300 hover:scale-110"
-          aria-label="Повернутися на головну сторінку"
-          title="На головну"
+          aria-label="Volver al inicio"
+          title="Inicio"
           type="button"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -130,8 +118,8 @@ export function SceneContainer({ children }: Props) {
           className="glass-panel inline-flex h-12 w-12 items-center justify-center rounded-full text-[rgba(var(--color-accent),0.92)] transition-transform duration-300 hover:scale-110"
           aria-expanded={menuOpen}
           aria-controls="scene-settings"
-          aria-label="Відкрити налаштування читання"
-          title="Налаштування читання"
+          aria-label="Abrir ajustes de lectura"
+          title="Ajustes de lectura"
           type="button"
         >
           <svg
@@ -158,27 +146,27 @@ export function SceneContainer({ children }: Props) {
           menuOpen ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-4 opacity-0'
         }`}
         aria-hidden={!menuOpen}
-        aria-label="Панель налаштувань читання"
+        aria-label="Panel de ajustes de lectura"
       >
         <h2
           className="text-2xl text-[rgba(var(--color-accent),0.96)]"
-          style={{ fontFamily: "'Marck Script', cursive" }}
+          style={{ fontFamily: 'var(--font-display)' }}
         >
-          Налаштування читання
+          Ajustes de lectura
         </h2>
 
-        <div className="mt-4 space-y-5 text-[rgba(var(--color-accent),0.86)]" style={{ fontFamily: "'Philosopher', sans-serif" }}>
+        <div className="mt-4 space-y-5 text-[rgba(var(--color-accent),0.86)]" style={{ fontFamily: 'var(--font-body)' }}>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold text-[rgba(var(--color-accent),0.95)]">Режим читання</p>
-              <p className="text-xs text-[rgba(var(--color-accent),0.74)]">Менше яскравості, більше фокусу на тексті</p>
+              <p className="text-sm font-semibold text-[rgba(var(--color-accent),0.95)]">Modo lectura</p>
+              <p className="text-xs text-[rgba(var(--color-accent),0.74)]">Menos brillo y más foco sobre el texto</p>
             </div>
 
             <button
               type="button"
               role="switch"
               aria-checked={readingMode}
-              aria-label="Увімкнути або вимкнути режим читання"
+              aria-label="Activar o desactivar el modo lectura"
               onClick={() => setReadingMode((value) => !value)}
               className={`relative h-7 w-14 rounded-full border transition-colors duration-300 ${
                 readingMode
@@ -195,7 +183,7 @@ export function SceneContainer({ children }: Props) {
           </div>
 
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-[rgba(var(--color-accent),0.62)]">Розмір тексту</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-[rgba(var(--color-accent),0.62)]">Tamaño del texto</p>
             <div className="mt-3 grid grid-cols-3 gap-2">
               {TEXT_SIZE_OPTIONS.map((option) => (
                 <button
@@ -217,19 +205,19 @@ export function SceneContainer({ children }: Props) {
           </div>
 
           <div className="flex items-center gap-2 text-xs text-[rgba(var(--color-accent),0.66)]">
-            <span>Швидкі клавіші:</span>
+            <span>Atajos:</span>
             <span className="rounded border border-[rgba(var(--color-accent),0.32)] bg-[rgba(var(--color-secondary),0.28)] px-2 py-0.5">→</span>
             <span className="rounded border border-[rgba(var(--color-accent),0.32)] bg-[rgba(var(--color-secondary),0.28)] px-2 py-0.5">Enter</span>
-            <span className="rounded border border-[rgba(var(--color-accent),0.32)] bg-[rgba(var(--color-secondary),0.28)] px-2 py-0.5">Space</span>
+            <span className="rounded border border-[rgba(var(--color-accent),0.32)] bg-[rgba(var(--color-secondary),0.28)] px-2 py-0.5">Espacio</span>
           </div>
 
           <button
             onClick={handleGoHome}
             type="button"
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[rgba(var(--color-accent),0.42)] bg-[rgba(var(--color-secondary),0.34)] px-4 py-2.5 text-sm font-semibold text-[rgba(var(--color-accent),0.95)] transition-colors duration-300 hover:bg-[rgba(var(--color-secondary),0.45)]"
-            aria-label="Повернутися на головну сторінку"
+            aria-label="Volver al inicio"
           >
-            На головну
+            Inicio
           </button>
         </div>
       </section>
@@ -237,7 +225,7 @@ export function SceneContainer({ children }: Props) {
       {menuOpen ? (
         <button
           type="button"
-          aria-label="Закрити панель налаштувань"
+          aria-label="Cerrar panel de ajustes"
           onClick={() => setMenuOpen(false)}
           className="absolute inset-0 z-[60] bg-black/45"
         />

@@ -1,40 +1,43 @@
-﻿import './globals.css'
+import type { Metadata } from 'next'
+import { Marck_Script, Philosopher } from 'next/font/google'
+import './globals.css'
 
-export const metadata = {
-  title: 'Котигорошко — інтерактивна українська казка',
-  description:
-    'Пориньте у магічний світ української народної казки про відважного героя Котигорошка.',
-  keywords:
-    'українська казка, Котигорошко, інтерактивна історія, фольклор, народна казка',
+const displayFont = Marck_Script({
+  weight: '400',
+  subsets: ['latin', 'cyrillic'],
+  variable: '--font-display',
+})
+
+const bodyFont = Philosopher({
+  weight: ['400', '700'],
+  subsets: ['latin', 'cyrillic'],
+  variable: '--font-body',
+})
+
+export const metadata: Metadata = {
+  title: 'Kotyhoroshko | cuento interactivo',
+  description: 'Sumérgete en una versión interactiva del cuento popular ucraniano de Kotyhoroshko.',
+  keywords: ['cuento ucraniano', 'Kotyhoroshko', 'historia interactiva', 'folclore', 'cuento popular'],
   authors: [{ name: 'Kotyhoroshko Tale' }],
   openGraph: {
-    title: 'Котигорошко — інтерактивна українська казка',
-    description:
-      'Пориньте у магічний світ української народної казки про відважного героя Котигорошка.',
+    title: 'Kotyhoroshko | cuento interactivo',
+    description: 'Sumérgete en una versión interactiva del cuento popular ucraniano de Kotyhoroshko.',
     type: 'website',
   },
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
-    <html lang="uk">
+    <html lang="es" className={`${displayFont.variable} ${bodyFont.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Marck+Script&family=Philosopher:wght@400;700&display=swap"
-          rel="stylesheet"
-        />
         <meta name="theme-color" content="#000000" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
       </head>
-      <body className="bg-black text-white antialiased">
-        {children}
-      </body>
+      <body className="bg-black text-white antialiased">{children}</body>
     </html>
   )
 }

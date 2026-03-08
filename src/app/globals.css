@@ -49,12 +49,12 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Marck Script', cursive;
+  font-family: var(--font-display), cursive;
   letter-spacing: -0.02em;
 }
 
 p, span, div, button {
-  font-family: 'Philosopher', sans-serif;
+  font-family: var(--font-body), sans-serif;
 }
 
 ::-webkit-scrollbar {
