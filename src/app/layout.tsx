@@ -1,16 +1,16 @@
 ﻿import './globals.css'
 
 export const metadata = {
-  title: 'Kotyhoroshko — Cuento ucraniano interactivo',
+  title: 'Котигорошко — інтерактивна українська казка',
   description:
-    'Sumérgete en el mundo mágico del cuento popular ucraniano sobre el valiente héroe Kotyhoroshko.',
+    'Пориньте у магічний світ української народної казки про відважного героя Котигорошка.',
   keywords:
-    'cuento ucraniano, Kotyhoroshko, historia interactiva, folclore, cuento popular',
+    'українська казка, Котигорошко, інтерактивна історія, фольклор, народна казка',
   authors: [{ name: 'Kotyhoroshko Tale' }],
   openGraph: {
-    title: 'Kotyhoroshko — Cuento ucraniano interactivo',
+    title: 'Котигорошко — інтерактивна українська казка',
     description:
-      'Sumérgete en el mundo mágico del cuento popular ucraniano sobre el valiente héroe Kotyhoroshko.',
+      'Пориньте у магічний світ української народної казки про відважного героя Котигорошка.',
     type: 'website',
   },
 }
@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es">
+    <html lang="uk">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 type Props = {
   src: string
   alt: string
@@ -26,7 +28,7 @@ export function SceneLayer({
   if (media === 'video') {
     return (
       <video
-        className={`absolute inset-0 w-full h-full object-cover select-none ${className}`}
+        className={`absolute inset-0 h-full w-full select-none object-cover ${className}`}
         autoPlay={autoPlay}
         muted={muted}
         loop={loop}
@@ -41,12 +43,16 @@ export function SceneLayer({
   }
 
   return (
-    <img
-      src={src}
-      alt={alt}
-      className={`absolute inset-0 w-full h-full object-cover select-none ${className}`}
-      draggable={false}
-      loading={priority ? 'eager' : 'lazy'}
-    />
+    <div className={`absolute inset-0 ${className}`}>
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="100vw"
+        className="select-none object-cover"
+        priority={priority}
+        draggable={false}
+      />
+    </div>
   )
 }

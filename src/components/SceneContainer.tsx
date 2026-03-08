@@ -1,7 +1,8 @@
-﻿'use client'
+'use client'
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
+import { navigateWithPageTurn } from '@/lib/pageTurn'
 import { SceneTransition } from '@/components/SceneTransition'
 
 type Props = {
@@ -10,198 +11,247 @@ type Props = {
 
 type TextSize = 'normal' | 'large' | 'xlarge'
 
+const TEXT_SIZE_OPTIONS: Array<{ id: TextSize; label: string; ariaLabel: string }> = [
+  { id: 'normal', label: 'A', ariaLabel: 'Звичайний розмір тексту' },
+  { id: 'large', label: 'A+', ariaLabel: 'Збільшений розмір тексту' },
+  { id: 'xlarge', label: 'A++', ariaLabel: 'Дуже великий розмір тексту' },
+]
+
 export function SceneContainer({ children }: Props) {
+  const router = useRouter()
   const [isLoaded, setIsLoaded] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [textSize, setTextSize] = useState<TextSize>('normal')
   const [readingMode, setReadingMode] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoaded(true), 100)
-    return () => clearTimeout(timer)
+    const timer = window.setTimeout(() => setIsLoaded(true), 120)
+    return () => window.clearTimeout(timer)
   }, [])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    router.prefetch('/')
+  }, [router])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
     const storedSize = window.localStorage.getItem('story-text-size')
-    if (storedSize === 'normal' || storedSize === 'large' || storedSize === 'xlarge') {
-      setTextSize(storedSize)
-    }
     const storedReading = window.localStorage.getItem('story-reading-mode')
-    if (storedReading === 'true') {
-      setReadingMode(true)
-    }
+    const rafId = window.requestAnimationFrame(() => {
+      if (storedSize === 'normal' || storedSize === 'large' || storedSize === 'xlarge') {
+        setTextSize(storedSize)
+      }
+      if (storedReading === 'true' || storedReading === 'false') {
+        setReadingMode(storedReading === 'true')
+      }
+    })
+
+    return () => window.cancelAnimationFrame(rafId)
   }, [])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') {
+      return
+    }
     window.localStorage.setItem('story-text-size', textSize)
   }, [textSize])
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') {
+      return
+    }
     window.localStorage.setItem('story-reading-mode', String(readingMode))
   }, [readingMode])
 
   useEffect(() => {
-    const handleKey = (event: KeyboardEvent) => {
+    const root = document.documentElement
+    root.dataset.textSize = textSize
+    root.dataset.reading = readingMode ? 'on' : 'off'
+
+    return () => {
+      delete root.dataset.textSize
+      delete root.dataset.reading
+    }
+  }, [textSize, readingMode])
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setMenuOpen(false)
       }
     }
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
+
+  const handleGoHome = useCallback(() => {
+    navigateWithPageTurn(() => {
+      router.push('/')
+    }, { direction: 'backward' })
+  }, [router])
 
   return (
     <div
-      data-text-size={textSize}
-      data-reading={readingMode ? 'on' : 'off'}
-      className={`relative w-full h-[100svh] min-h-[100svh] overflow-hidden bg-black transition-opacity duration-1000 ${
+      className={`relative min-h-[100svh] w-full overflow-hidden bg-black transition-opacity duration-700 ${
         isLoaded ? 'opacity-100' : 'opacity-0'
       }`}
     >
       {children}
-      {readingMode ? (
-        <div className="absolute inset-0 z-25 pointer-events-none bg-black/35 backdrop-blur-[1px] transition-opacity duration-500"></div>
-      ) : null}
       <SceneTransition />
 
-      {/* Top navigation controls */}
-      <div className="absolute top-[calc(1.5rem+env(safe-area-inset-top))] right-[calc(1.5rem+env(safe-area-inset-right))] flex gap-3 z-50">
-        <Link
-          href="/"
-          className="w-14 h-14 rounded-full bg-[#2a170b]/80 backdrop-blur-md border-2 border-[#f2d4a4]/20 flex items-center justify-center text-[#f7efe4]/80 hover:text-[#fff1d8] hover:bg-[#2a170b]/95 hover:border-[#f9e1b5]/50 transition-all duration-300 hover:scale-110 shadow-lg group"
-          title="Inicio"
-          aria-label="Volver al inicio"
+      {readingMode ? (
+        <div className="pointer-events-none absolute inset-0 z-[25] bg-black/40 backdrop-blur-[1px]" />
+      ) : null}
+
+      <div className="absolute right-[calc(1.1rem+env(safe-area-inset-right))] top-[calc(1.1rem+env(safe-area-inset-top))] z-50 flex items-center gap-3">
+        <button
+          onClick={handleGoHome}
+          className="glass-panel inline-flex h-12 w-12 items-center justify-center rounded-full text-[rgba(var(--color-accent),0.92)] transition-transform duration-300 hover:scale-110"
+          aria-label="Повернутися на головну сторінку"
+          title="На головну"
+          type="button"
         >
-          <svg className="w-6 h-6 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.2}
+              d="M3 12l2-2m0 0 7-7 7 7M5 10v10a1 1 0 0 0 1 1h3m10-11 2 2m-2-2v10a1 1 0 0 1-1 1h-3m-6 0a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1m-6 0h6"
+            />
           </svg>
-        </Link>
+        </button>
 
         <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="w-14 h-14 rounded-full bg-[#2a170b]/80 backdrop-blur-md border-2 border-[#f2d4a4]/20 flex items-center justify-center text-[#f7efe4]/80 hover:text-[#fff1d8] hover:bg-[#2a170b]/95 hover:border-[#f9e1b5]/50 transition-all duration-300 hover:scale-110 shadow-lg group"
-          title="Ajustes"
+          onClick={() => setMenuOpen((value) => !value)}
+          className="glass-panel inline-flex h-12 w-12 items-center justify-center rounded-full text-[rgba(var(--color-accent),0.92)] transition-transform duration-300 hover:scale-110"
           aria-expanded={menuOpen}
           aria-controls="scene-settings"
-          aria-label="Abrir ajustes de lectura"
+          aria-label="Відкрити налаштування читання"
+          title="Налаштування читання"
           type="button"
         >
           <svg
-            className={`w-6 h-6 transition-all duration-300 group-hover:scale-110 ${menuOpen ? 'rotate-90' : ''}`}
+            className={`h-5 w-5 transition-transform duration-300 ${menuOpen ? 'rotate-90' : ''}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.2}
+              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065Z"
+            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
           </svg>
         </button>
       </div>
 
-      <div
+      <section
         id="scene-settings"
-        aria-hidden={!menuOpen}
-        className={`absolute top-[calc(4.75rem+env(safe-area-inset-top))] right-[calc(1.5rem+env(safe-area-inset-right))] w-[22rem] rounded-2xl bg-gradient-to-br from-[#2a170b]/98 via-[#1f1209]/98 to-[#2a170b]/98 backdrop-blur-2xl border-2 border-[#f2d4a4]/20 shadow-2xl shadow-black/60 transition-all duration-300 z-[70] ${
-          menuOpen ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'
+        className={`glass-panel absolute right-[calc(1.1rem+env(safe-area-inset-right))] top-[calc(4.9rem+env(safe-area-inset-top))] z-[70] w-[22rem] max-w-[calc(100vw-2.2rem)] rounded-2xl border-[rgba(var(--color-accent),0.3)] p-5 transition-all duration-300 ${
+          menuOpen ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-4 opacity-0'
         }`}
+        aria-hidden={!menuOpen}
+        aria-label="Панель налаштувань читання"
       >
-        <div className="p-6 space-y-5">
-          <h3 className="text-xl font-bold text-[#f7efe4] flex items-center gap-2" style={{ fontFamily: "'Philosopher', sans-serif" }}>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-            </svg>
-            Ajustes de lectura
-          </h3>
+        <h2
+          className="text-2xl text-[rgba(var(--color-accent),0.96)]"
+          style={{ fontFamily: "'Marck Script', cursive" }}
+        >
+          Налаштування читання
+        </h2>
 
-          <div className="space-y-4 text-sm text-[#f2d4a4]/80" style={{ fontFamily: "'Philosopher', sans-serif" }}>
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-[#f7efe4]/90 font-medium">Modo lectura</p>
-                <p className="text-xs text-[#f2d4a4]/70">Atenúa el fondo y mejora la concentración.</p>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={readingMode}
-                onClick={() => setReadingMode(!readingMode)}
-                className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${readingMode ? 'bg-[#f4bc55]' : 'bg-[#3b2412]'}`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-[#fff1d8] shadow-md transition-transform duration-300 ${
-                    readingMode ? 'translate-x-7' : 'translate-x-0'
-                  }`}
-                ></span>
-              </button>
-            </div>
-
+        <div className="mt-4 space-y-5 text-[rgba(var(--color-accent),0.86)]" style={{ fontFamily: "'Philosopher', sans-serif" }}>
+          <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-[#f2d4a4]/60">Tamaño de texto</p>
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                {([
-                  { id: 'normal', label: 'A' },
-                  { id: 'large', label: 'A+' },
-                  { id: 'xlarge', label: 'A++' },
-                ] as const).map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => setTextSize(option.id)}
-                    aria-pressed={textSize === option.id}
-                    className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-all duration-300 ${
-                      textSize === option.id
-                        ? 'border-[#f9e1b5]/70 bg-[#3b2412]/60 text-[#fff1d8] shadow-lg shadow-black/30'
-                        : 'border-[#f2d4a4]/20 bg-[#2a170b]/40 text-[#f2d4a4]/80 hover:border-[#f2d4a4]/50 hover:text-[#fff1d8]'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+              <p className="text-sm font-semibold text-[rgba(var(--color-accent),0.95)]">Режим читання</p>
+              <p className="text-xs text-[rgba(var(--color-accent),0.74)]">Менше яскравості, більше фокусу на тексті</p>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-[#f2d4a4]/60">
-              <span>Atajos:</span>
-              <span className="rounded-md bg-[#2a170b]/70 px-2 py-1 text-[#fff1d8]">→</span>
-              <span className="rounded-md bg-[#2a170b]/70 px-2 py-1 text-[#fff1d8]">Enter</span>
-            </div>
-          </div>
-
-          <div className="pt-4 border-t border-white/10">
-            <Link
-              href="/"
-              className="w-full py-3 px-4 rounded-xl bg-[#3b2412]/30 hover:bg-[#3b2412]/45 text-[#f7efe4] hover:text-[#fff1d8] transition-all duration-300 text-sm font-medium flex items-center justify-center gap-2 border border-[#f2d4a4]/25"
-              style={{ fontFamily: "'Philosopher', sans-serif" }}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={readingMode}
+              aria-label="Увімкнути або вимкнути режим читання"
+              onClick={() => setReadingMode((value) => !value)}
+              className={`relative h-7 w-14 rounded-full border transition-colors duration-300 ${
+                readingMode
+                  ? 'border-[rgba(var(--color-accent),0.7)] bg-[rgba(var(--color-primary),0.86)]'
+                  : 'border-[rgba(var(--color-accent),0.28)] bg-[rgba(var(--color-secondary),0.35)]'
+              }`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              Volver al inicio
-            </Link>
+              <span
+                className={`absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-[rgba(var(--color-accent),0.98)] shadow transition-transform duration-300 ${
+                  readingMode ? 'translate-x-7' : 'translate-x-0'
+                }`}
+              />
+            </button>
           </div>
+
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-[rgba(var(--color-accent),0.62)]">Розмір тексту</p>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {TEXT_SIZE_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setTextSize(option.id)}
+                  aria-pressed={textSize === option.id}
+                  aria-label={option.ariaLabel}
+                  className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-all duration-300 ${
+                    textSize === option.id
+                      ? 'border-[rgba(var(--color-accent),0.72)] bg-[rgba(var(--color-secondary),0.45)] text-[rgba(var(--color-accent),0.98)]'
+                      : 'border-[rgba(var(--color-accent),0.3)] bg-[rgba(var(--color-secondary),0.2)] text-[rgba(var(--color-accent),0.78)] hover:border-[rgba(var(--color-accent),0.58)] hover:text-[rgba(var(--color-accent),0.95)]'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-[rgba(var(--color-accent),0.66)]">
+            <span>Швидкі клавіші:</span>
+            <span className="rounded border border-[rgba(var(--color-accent),0.32)] bg-[rgba(var(--color-secondary),0.28)] px-2 py-0.5">→</span>
+            <span className="rounded border border-[rgba(var(--color-accent),0.32)] bg-[rgba(var(--color-secondary),0.28)] px-2 py-0.5">Enter</span>
+            <span className="rounded border border-[rgba(var(--color-accent),0.32)] bg-[rgba(var(--color-secondary),0.28)] px-2 py-0.5">Space</span>
+          </div>
+
+          <button
+            onClick={handleGoHome}
+            type="button"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[rgba(var(--color-accent),0.42)] bg-[rgba(var(--color-secondary),0.34)] px-4 py-2.5 text-sm font-semibold text-[rgba(var(--color-accent),0.95)] transition-colors duration-300 hover:bg-[rgba(var(--color-secondary),0.45)]"
+            aria-label="Повернутися на головну сторінку"
+          >
+            На головну
+          </button>
         </div>
-      </div>
+      </section>
 
       {menuOpen ? (
         <button
           type="button"
-          aria-label="Cerrar ajustes"
-          className="absolute inset-0 z-[60] bg-black/40 backdrop-blur-[1px]"
+          aria-label="Закрити панель налаштувань"
           onClick={() => setMenuOpen(false)}
-        ></button>
+          className="absolute inset-0 z-[60] bg-black/45"
+        />
       ) : null}
 
       <div
-        className={`absolute inset-0 bg-black pointer-events-none transition-opacity duration-1000 ${
+        className={`pointer-events-none absolute inset-0 z-[80] bg-black transition-opacity duration-700 ${
           isLoaded ? 'opacity-0' : 'opacity-100'
         }`}
       >
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative">
-            <div className="w-20 h-20 rounded-full border-4 border-[#f2d4a4]/30 border-t-[#fbe9c9] animate-spin"></div>
-            <div className="absolute inset-0 w-20 h-20 rounded-full border-4 border-[#f2d4a4]/20 border-b-[#f2d4a4] animate-spin-reverse"></div>
+          <div className="relative h-16 w-16">
+            <div className="absolute inset-0 animate-spin rounded-full border-4 border-[rgba(var(--color-accent),0.24)] border-t-[rgba(var(--color-accent),0.95)]" />
+            <div className="animate-spin-reverse absolute inset-1 rounded-full border-2 border-[rgba(var(--color-primary),0.28)] border-b-[rgba(var(--color-primary),0.9)]" />
           </div>
         </div>
       </div>
