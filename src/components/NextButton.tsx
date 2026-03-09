@@ -77,7 +77,7 @@ export function NextButton({
   return (
     <button
       onClick={handleNavigate}
-      className="btn-glow group absolute z-40 inline-flex items-center gap-3 overflow-hidden rounded-2xl border border-[rgba(var(--color-accent),0.45)] bg-[linear-gradient(135deg,rgba(var(--color-secondary),0.95),rgba(var(--color-primary),0.96),rgba(var(--color-secondary),0.95))] px-8 py-4 text-lg font-bold text-[#2a170b] shadow-2xl shadow-black/55 transition-all duration-300 hover:scale-[1.04] hover:border-[rgba(var(--color-accent),0.75)] disabled:cursor-not-allowed disabled:opacity-75 sm:px-9 sm:py-4"
+      className="button-primary btn-glow group absolute z-40 inline-flex items-center gap-3 overflow-hidden rounded-2xl px-8 py-4 text-lg font-bold shadow-2xl shadow-black/55 transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-75 sm:px-9 sm:py-4"
       style={{
         bottom: 'calc(2rem + env(safe-area-inset-bottom))',
         right: 'calc(1.25rem + env(safe-area-inset-right))',
@@ -85,7 +85,7 @@ export function NextButton({
       }}
       aria-label={label}
       aria-keyshortcuts="ArrowRight Enter Space"
-      title={`${label} (→, Enter, Space)`}
+      title={`${label} (ArrowRight, Enter, Space)`}
       disabled={isNavigating || !targetPath}
       type="button"
     >

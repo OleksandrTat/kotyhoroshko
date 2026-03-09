@@ -1,3 +1,4 @@
+import type { ReactEventHandler, RefObject } from 'react'
 import Image from 'next/image'
 
 type Props = {
@@ -11,6 +12,10 @@ type Props = {
   autoPlay?: boolean
   loop?: boolean
   playsInline?: boolean
+  videoRef?: RefObject<HTMLVideoElement | null>
+  onEnded?: ReactEventHandler<HTMLVideoElement>
+  onLoadedMetadata?: ReactEventHandler<HTMLVideoElement>
+  onTimeUpdate?: ReactEventHandler<HTMLVideoElement>
 }
 
 export function SceneLayer({
@@ -24,6 +29,10 @@ export function SceneLayer({
   autoPlay = true,
   loop = true,
   playsInline = true,
+  videoRef,
+  onEnded,
+  onLoadedMetadata,
+  onTimeUpdate,
 }: Props) {
   const normalizedSrc = encodeURI(src)
   const normalizedPoster = poster ? encodeURI(poster) : undefined
@@ -31,6 +40,7 @@ export function SceneLayer({
   if (media === 'video') {
     return (
       <video
+        ref={videoRef}
         className={`absolute inset-0 h-full w-full select-none object-cover ${className}`}
         autoPlay={autoPlay}
         muted={muted}
@@ -39,6 +49,9 @@ export function SceneLayer({
         preload={priority ? 'auto' : 'metadata'}
         poster={normalizedPoster}
         aria-label={alt}
+        onEnded={onEnded}
+        onLoadedMetadata={onLoadedMetadata}
+        onTimeUpdate={onTimeUpdate}
       >
         <source src={normalizedSrc} type="video/mp4" />
       </video>

@@ -37,6 +37,34 @@ export type SceneMedia =
       alt: string
     }
 
+export type VideoGame =
+  | {
+      type: 'collect'
+      title: string
+      description: string
+      theme: 'pea' | 'firefly' | 'spark'
+      targetLabel: string
+    }
+  | {
+      type: 'trail'
+      title: string
+      description: string
+      stepLabel: string
+    }
+  | {
+      type: 'drag'
+      title: string
+      description: string
+      tokenLabel: string
+      goalLabel: string
+    }
+  | {
+      type: 'hold'
+      title: string
+      description: string
+      actionLabel: string
+    }
+
 export type Scene = {
   id: number
   title: string
@@ -44,6 +72,7 @@ export type Scene = {
   theme: SceneTheme
   panelAlign?: 'left' | 'right'
   media: SceneMedia
+  videoGame?: VideoGame
 }
 
 const video = (src: string, alt: string, poster?: string): SceneMedia => ({
@@ -94,6 +123,13 @@ export const SCENES: Scene[] = [
       'Interior cálido de una casa campesina al anochecer',
       '/scenes/scene-1/background.jpeg',
     ),
+    videoGame: {
+      type: 'collect',
+      title: 'Reúne las luces del hogar',
+      description: 'Toca las tres lucecitas doradas para despertar la escena.',
+      theme: 'firefly',
+      targetLabel: 'Luz del hogar',
+    },
   },
   {
     id: 2,
@@ -121,6 +157,13 @@ export const SCENES: Scene[] = [
       '/scenes/scene-3/Animate_scene_two_halves_fdaf664df4.mp4',
       'Los hermanos abren un surco en el campo mientras trabajan',
     ),
+    videoGame: {
+      type: 'drag',
+      title: 'Guía el arado',
+      description: 'Arrastra el arado hasta el final del surco para ayudar a los hermanos.',
+      tokenLabel: 'Arado',
+      goalLabel: 'Final del surco',
+    },
   },
   {
     id: 4,
@@ -133,6 +176,13 @@ export const SCENES: Scene[] = [
       '/scenes/scene-4/Dragon_breathes_and_moves_wings_7e6828a779.mp4',
       'Un dragón acecha junto al bosque y prepara una emboscada',
     ),
+    videoGame: {
+      type: 'collect',
+      title: 'Atrapa las chispas',
+      description: 'Toca las chispas del dragón antes de que se escapen.',
+      theme: 'spark',
+      targetLabel: 'Chispa del dragón',
+    },
   },
   {
     id: 5,
@@ -157,6 +207,12 @@ export const SCENES: Scene[] = [
       '/scenes/scene-6/Use_the_provided_image_as_the_main_visual_referenc_d0ebf902cc.mp4',
       'Los hermanos recorren el bosque en busca de su hermana',
     ),
+    videoGame: {
+      type: 'trail',
+      title: 'Sigue las huellas',
+      description: 'Toca las huellas en orden para encontrar el camino en el bosque.',
+      stepLabel: 'Huella',
+    },
   },
   {
     id: 7,
@@ -253,10 +309,17 @@ export const SCENES: Scene[] = [
       'Mientras estaba fuera, Kotyhoroshko levantó la piedra con una sola mano. Cuando la gente llegó, todos se quedaron asombrados.',
     ],
     theme: 'hearth',
-    media: image(
-      '/scenes/scene-14/Reinterpretacin_moderna_y_coherente_de_un_cuento_t_46e28116b7.jpeg',
+    media: video(
+      '/scenes/scene-14/Man_holding_rock_breathing_0b7efe448e.mp4',
       'Kotyhoroshko levanta una piedra enorme con una sola mano',
+      '/scenes/scene-14/Reinterpretacin_moderna_y_coherente_de_un_cuento_t_46e28116b7.jpeg',
     ),
+    videoGame: {
+      type: 'hold',
+      title: 'Ayuda a levantar la roca',
+      description: 'Mantén pulsado para llenar la fuerza de Kotyhoroshko.',
+      actionLabel: 'Levantar',
+    },
   },
   {
     id: 15,
