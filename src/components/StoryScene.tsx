@@ -100,6 +100,87 @@ const TRAIL_TARGETS = [
 const DRAG_TOKEN_SIZE = 76
 const DRAG_GOAL = { left: 0.72, top: 0.18, width: 0.18, height: 0.24 } as const
 
+const THEME_META: Record<
+  SceneTheme,
+  { label: string; mood: string; hint: string; moteClass: string }
+> = {
+  hearth: {
+    label: 'Hogar',
+    mood: 'La historia empieza junto al fuego.',
+    hint: 'Lee con calma y mueve el texto si tapa la escena.',
+    moteClass: 'bg-[radial-gradient(circle,rgba(255,214,132,0.95),rgba(214,134,76,0.18)_60%,transparent_100%)]',
+  },
+  field: {
+    label: 'Campo',
+    mood: 'Todo parece tranquilo antes del giro del cuento.',
+    hint: 'Observa el trabajo del campo antes de continuar.',
+    moteClass: 'bg-[radial-gradient(circle,rgba(232,212,140,0.92),rgba(168,138,72,0.16)_60%,transparent_100%)]',
+  },
+  forest: {
+    label: 'Bosque',
+    mood: 'El camino se vuelve incierto.',
+    hint: 'Busca pistas en la imagen y en los movimientos del fondo.',
+    moteClass: 'bg-[radial-gradient(circle,rgba(170,224,158,0.9),rgba(68,132,98,0.15)_60%,transparent_100%)]',
+  },
+  dragon: {
+    label: 'Dragon',
+    mood: 'La amenaza ya esta cerca.',
+    hint: 'Cuando aparezca un reto, complétalo para seguir.',
+    moteClass: 'bg-[radial-gradient(circle,rgba(255,162,122,0.94),rgba(168,58,34,0.16)_60%,transparent_100%)]',
+  },
+  dungeon: {
+    label: 'Mazmorra',
+    mood: 'La luz casi desaparece.',
+    hint: 'Activa el modo lectura si quieres mas foco en el texto.',
+    moteClass: 'bg-[radial-gradient(circle,rgba(180,197,240,0.88),rgba(88,100,144,0.16)_60%,transparent_100%)]',
+  },
+  wonder: {
+    label: 'Magia',
+    mood: 'El cuento respira asombro.',
+    hint: 'Deja que la escena aparezca antes de tocar nada.',
+    moteClass: 'bg-[radial-gradient(circle,rgba(197,245,192,0.92),rgba(124,170,114,0.15)_60%,transparent_100%)]',
+  },
+  forge: {
+    label: 'Forja',
+    mood: 'La fuerza se construye paso a paso.',
+    hint: 'Cada escena prepara el combate final.',
+    moteClass: 'bg-[radial-gradient(circle,rgba(255,190,138,0.92),rgba(170,92,42,0.16)_60%,transparent_100%)]',
+  },
+  sky: {
+    label: 'Cielo',
+    mood: 'Todo se vuelve mas grande.',
+    hint: 'La historia sube de escala en estas escenas.',
+    moteClass: 'bg-[radial-gradient(circle,rgba(188,214,255,0.9),rgba(92,122,180,0.14)_60%,transparent_100%)]',
+  },
+  trail: {
+    label: 'Huella',
+    mood: 'El viaje sigue marcado sobre la tierra.',
+    hint: 'Sigue el recorrido sin perder el hilo.',
+    moteClass: 'bg-[radial-gradient(circle,rgba(224,205,136,0.9),rgba(134,112,62,0.14)_60%,transparent_100%)]',
+  },
+  duel: {
+    label: 'Duelo',
+    mood: 'La tension ya no se puede detener.',
+    hint: 'Cada escena aqui empuja la historia hacia el choque final.',
+    moteClass: 'bg-[radial-gradient(circle,rgba(255,174,138,0.92),rgba(182,76,48,0.16)_60%,transparent_100%)]',
+  },
+  escape: {
+    label: 'Huida',
+    mood: 'Nada se queda quieto al final.',
+    hint: 'Mantente atento: el peligro sigue en movimiento.',
+    moteClass: 'bg-[radial-gradient(circle,rgba(198,208,255,0.9),rgba(112,124,182,0.14)_60%,transparent_100%)]',
+  },
+}
+
+const MOTE_LAYOUT = [
+  { top: '12%', left: '18%', size: 10, delay: '0.2s', duration: '9s' },
+  { top: '22%', left: '72%', size: 8, delay: '1.4s', duration: '11s' },
+  { top: '34%', left: '52%', size: 12, delay: '2.2s', duration: '10s' },
+  { top: '58%', left: '16%', size: 7, delay: '3.3s', duration: '12s' },
+  { top: '68%', left: '78%', size: 11, delay: '1s', duration: '8.5s' },
+  { top: '80%', left: '38%', size: 9, delay: '2.8s', duration: '10.5s' },
+] as const
+
 function AmbientBackdrop({ theme }: { theme: SceneTheme }) {
   const style = THEME_STYLES[theme]
 
@@ -110,6 +191,179 @@ function AmbientBackdrop({ theme }: { theme: SceneTheme }) {
       <div className={`animate-float absolute inset-0 ${style.glowB}`} style={{ animationDelay: '1.2s' }} />
       <div className="absolute inset-0 opacity-25 [background-image:radial-gradient(rgba(255,225,174,0.14)_1px,transparent_1px)] [background-size:4px_4px]" />
       <div className={`absolute inset-0 ${style.veil}`} />
+    </div>
+  )
+}
+
+function SceneMotes({ theme }: { theme: SceneTheme }) {
+  const meta = THEME_META[theme]
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-[14] overflow-hidden">
+      {MOTE_LAYOUT.map((mote, index) => (
+        <span
+          key={`${theme}-${index}`}
+          className={`scene-mote absolute rounded-full blur-[1px] ${meta.moteClass}`}
+          style={{
+            top: mote.top,
+            left: mote.left,
+            width: `${mote.size}px`,
+            height: `${mote.size}px`,
+            animationDelay: mote.delay,
+            animationDuration: mote.duration,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+function SceneTitleReveal({
+  scene,
+  visible,
+}: {
+  scene: Scene
+  visible: boolean
+}) {
+  const meta = THEME_META[scene.theme]
+
+  if (!visible) {
+    return null
+  }
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-[36] flex items-center justify-center p-6">
+      <div className="animate-title-card rounded-[2rem] border border-[rgba(var(--color-accent),0.2)] bg-[linear-gradient(145deg,rgba(17,9,6,0.78),rgba(8,4,3,0.64))] px-8 py-7 text-center shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+        <p className="text-[11px] uppercase tracking-[0.34em] text-[rgba(var(--color-accent),0.6)]">
+          Escena {scene.id} · {meta.label}
+        </p>
+        <h2 className="mt-4 text-4xl text-[rgba(var(--color-accent),0.98)] sm:text-5xl" style={{ fontFamily: 'var(--font-display)' }}>
+          {scene.title}
+        </h2>
+        <p className="mt-3 text-sm uppercase tracking-[0.18em] text-[rgba(var(--color-accent),0.66)] sm:text-base">
+          {meta.mood}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function SceneHud({
+  scene,
+  progressValue,
+}: {
+  scene: Scene
+  progressValue: number
+}) {
+  const meta = THEME_META[scene.theme]
+  const isInteractive = scene.media.kind === 'video' && Boolean(scene.videoGame)
+
+  return (
+    <div className="absolute left-[calc(1rem+env(safe-area-inset-left))] top-[calc(1rem+env(safe-area-inset-top))] z-40 flex max-w-[min(28rem,calc(100vw-8.5rem))] animate-hud-slide flex-col gap-3">
+      <div className="glass-panel rounded-[1.5rem] px-4 py-3">
+        <div className="flex items-start gap-3">
+          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[rgba(var(--color-accent),0.42)] bg-[rgba(var(--color-secondary),0.2)] text-lg font-bold text-[rgba(var(--color-accent),0.96)]">
+            <span className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_top,rgba(var(--color-primary),0.2),transparent_70%)]" />
+            <span className="relative">{scene.id}</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-[rgba(var(--color-accent),0.62)]">
+              {meta.label} · {Math.round(progressValue)}%
+            </p>
+            <p className="mt-1 text-base font-semibold text-[rgba(var(--color-accent),0.96)] sm:text-lg">
+              {scene.title}
+            </p>
+            <p className="mt-1 text-sm text-[rgba(var(--color-accent),0.68)]">{meta.mood}</p>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+            <span className="animate-soft-pulse rounded-full border border-[rgba(var(--color-accent),0.16)] bg-[rgba(255,255,255,0.04)] px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[rgba(var(--color-accent),0.68)]">
+              {scene.media.kind === 'video' ? 'Escena en movimiento' : 'Escena para leer'}
+            </span>
+          {isInteractive ? (
+            <span className="rounded-full border border-[rgba(205,255,170,0.22)] bg-[rgba(112,188,54,0.14)] px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-[rgba(205,255,170,0.86)]">
+              Juego breve
+            </span>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function StoryGuide({
+  message,
+  onDismiss,
+}: {
+  message: string
+  onDismiss: () => void
+}) {
+  return (
+    <div className="absolute bottom-[calc(7rem+env(safe-area-inset-bottom))] left-1/2 z-[37] w-[min(92vw,28rem)] -translate-x-1/2 animate-fade-in-up">
+      <div className="glass-panel rounded-[1.35rem] border-[rgba(var(--color-accent),0.22)] px-4 py-3 text-[rgba(var(--color-accent),0.88)] shadow-[0_16px_36px_rgba(0,0,0,0.32)]">
+        <div className="flex items-start gap-3">
+          <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(var(--color-secondary),0.26)] text-sm font-bold text-[rgba(var(--color-accent),0.95)]">
+            i
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs uppercase tracking-[0.24em] text-[rgba(var(--color-accent),0.62)]">Guia rapida</p>
+            <p className="mt-1 text-sm leading-relaxed sm:text-base">{message}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onDismiss}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[rgba(var(--color-accent),0.16)] bg-[rgba(255,255,255,0.03)] text-[rgba(var(--color-accent),0.74)] hover:bg-[rgba(255,255,255,0.08)]"
+            aria-label="Cerrar ayuda"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SceneJourney({
+  scene,
+  progressValue,
+}: {
+  scene: Scene
+  progressValue: number
+}) {
+  const meta = THEME_META[scene.theme]
+  const milestones = [1, 7, 14, 21, 28]
+
+  return (
+    <div className="pointer-events-none absolute bottom-[calc(1.35rem+env(safe-area-inset-bottom))] left-[calc(1rem+env(safe-area-inset-left))] z-[34] hidden w-[min(28rem,calc(100vw-9rem))] lg:block">
+      <div className="glass-panel rounded-[1.35rem] px-4 py-3">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-[rgba(var(--color-accent),0.58)]">Recorrido</p>
+            <p className="mt-1 truncate text-base text-[rgba(var(--color-accent),0.94)]">
+              {meta.label} · {scene.title}
+            </p>
+          </div>
+          <p className="text-sm text-[rgba(var(--color-accent),0.7)]">{Math.round(progressValue)}%</p>
+        </div>
+
+        <div className="mt-3 flex items-center gap-2">
+          {milestones.map((milestone) => {
+            const active = scene.id >= milestone
+
+            return (
+              <span
+                key={milestone}
+                className={`h-2 flex-1 rounded-full ${
+                  active
+                    ? 'bg-[linear-gradient(90deg,rgba(255,225,174,0.92),rgba(214,134,76,0.9))]'
+                    : 'bg-[rgba(255,255,255,0.08)]'
+                }`}
+              />
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }
@@ -196,7 +450,7 @@ function CollectGameOverlay({
               onClick={() => handleCollect(index)}
               aria-label={`${game.targetLabel} ${index + 1}`}
               className={`absolute h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(var(--color-accent),0.4)] transition-all duration-300 ${gradient} ${
-                hidden ? 'pointer-events-none scale-0 opacity-0' : 'animate-float hover:scale-110'
+                hidden ? 'pointer-events-none scale-0 opacity-0' : 'animate-float animate-soft-pulse hover:scale-110'
               }`}
               style={{ top: target.top, left: target.left, animationDelay: `${index * 0.2}s` }}
             >
@@ -503,7 +757,7 @@ function HoldGameOverlay({
 
 function VideoChallengeOverlay({ game, onComplete }: { game: VideoGame; onComplete: () => void }) {
   return (
-    <div className="absolute inset-0 z-[58] flex items-center justify-center bg-[rgba(4,2,1,0.36)] p-4 backdrop-blur-[3px]">
+    <div className="animate-fade-in absolute inset-0 z-[58] flex items-center justify-center bg-[rgba(4,2,1,0.36)] p-4 backdrop-blur-[3px]">
       {game.type === 'collect' ? <CollectGameOverlay game={game} onComplete={onComplete} /> : null}
       {game.type === 'trail' ? <TrailGameOverlay game={game} onComplete={onComplete} /> : null}
       {game.type === 'drag' ? <DragGameOverlay game={game} onComplete={onComplete} /> : null}
@@ -514,7 +768,7 @@ function VideoChallengeOverlay({ game, onComplete }: { game: VideoGame; onComple
 
 function EndedVideoOverlay({ title, onReplay }: { title: string; onReplay: () => void }) {
   return (
-    <div className="absolute inset-0 z-[62] flex items-center justify-center bg-[rgba(5,3,2,0.42)] p-4 backdrop-blur-[3px]">
+    <div className="animate-fade-in absolute inset-0 z-[62] flex items-center justify-center bg-[rgba(5,3,2,0.42)] p-4 backdrop-blur-[3px]">
       <GameShell title="Escena completada" description={`Has terminado "${title}". Si quieres, puedes volver a verla desde el principio.`} badge="Pop-up">
         <button type="button" onClick={onReplay} className="button-primary btn-glow inline-flex items-center justify-center rounded-[1.2rem] px-6 py-3 text-base font-bold hover:scale-[1.03]">
           Ver otra vez
@@ -531,6 +785,7 @@ function DraggableStoryPanel({
   scene: Scene
   visible: boolean
 }) {
+  const meta = THEME_META[scene.theme]
   const panelRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<{ pointerId: number; startX: number; startY: number; originX: number; originY: number } | null>(null)
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null)
@@ -613,7 +868,7 @@ function DraggableStoryPanel({
     <div
       ref={panelRef}
       className={`absolute bottom-[calc(6.7rem+env(safe-area-inset-bottom))] left-[calc(1rem+env(safe-area-inset-left))] right-[calc(1rem+env(safe-area-inset-right))] z-[26] transition-all duration-700 sm:left-[calc(1.5rem+env(safe-area-inset-left))] sm:right-[calc(1.5rem+env(safe-area-inset-right))] ${position ? '' : alignedClass} ${
-        visible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+        visible ? 'animate-panel-rise opacity-100' : 'translate-y-8 opacity-0'
       }`}
       style={position ? { left: `${position.x}px`, top: `${position.y}px`, right: 'auto', bottom: 'auto', width: 'min(92vw, 32rem)' } : undefined}
     >
@@ -622,6 +877,7 @@ function DraggableStoryPanel({
         <div className="relative flex items-start justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-[rgba(var(--color-accent),0.68)]">Escena {scene.id} de {TOTAL_SCENES}</p>
+            <p className="mt-2 text-[11px] uppercase tracking-[0.26em] text-[rgba(var(--color-accent),0.52)]">{meta.label}</p>
             <h1 className="mt-3 text-4xl leading-none text-[rgba(var(--color-accent),0.98)] sm:text-5xl" style={{ fontFamily: 'var(--font-display)' }}>
               {scene.title}
             </h1>
@@ -639,7 +895,12 @@ function DraggableStoryPanel({
             Arrastra
           </button>
         </div>
-        <div className="relative mt-5 space-y-4">
+
+        <div className="relative mt-4 rounded-[1.25rem] border border-[rgba(var(--color-accent),0.12)] bg-[rgba(255,255,255,0.02)] px-3 py-2 text-xs uppercase tracking-[0.18em] text-[rgba(var(--color-accent),0.62)]">
+          {meta.hint}
+        </div>
+
+        <div className="story-scroll-mask relative mt-5 max-h-[min(42svh,25rem)] space-y-4 overflow-y-auto pr-2">
           {scene.text.map((paragraph) => (
             <p key={paragraph} className="story-text text-left font-medium text-[rgba(var(--color-accent),0.95)]">
               {paragraph}
@@ -764,6 +1025,7 @@ function InteractiveVideoLayer({
 
 export function StoryScene({ scene }: { scene: Scene }) {
   const [textVisible, setTextVisible] = useState(false)
+  const [guideMessage, setGuideMessage] = useState<string | null>(null)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const parallaxRef = useRef<HTMLDivElement>(null)
 
@@ -780,6 +1042,30 @@ export function StoryScene({ scene }: { scene: Scene }) {
     mediaQuery.addEventListener('change', syncPreference)
     return () => mediaQuery.removeEventListener('change', syncPreference)
   }, [])
+
+  useEffect(() => {
+    const guideKey = scene.media.kind === 'video' && scene.videoGame ? 'story-guide-video' : 'story-guide-reading'
+    const existingGuide = window.localStorage.getItem(guideKey)
+    const rafId = window.requestAnimationFrame(() => {
+      if (existingGuide) {
+        setGuideMessage(null)
+        return
+      }
+
+      const message =
+        scene.media.kind === 'video' && scene.videoGame
+          ? 'Esta escena se detiene para jugar un momento. Completa el reto y la historia seguira sola.'
+          : 'Puedes arrastrar el cuadro de texto si tapa una parte importante de la ilustracion.'
+
+      setGuideMessage(message)
+      window.localStorage.setItem(guideKey, 'seen')
+    })
+    const timeoutId = window.setTimeout(() => setGuideMessage(null), 5600)
+    return () => {
+      window.cancelAnimationFrame(rafId)
+      window.clearTimeout(timeoutId)
+    }
+  }, [scene.id, scene.media.kind, scene.videoGame])
 
   useEffect(() => {
     if (scene.media.kind !== 'layered') {
@@ -875,6 +1161,7 @@ export function StoryScene({ scene }: { scene: Scene }) {
     <SceneContainer>
       <div className="absolute inset-0 overflow-hidden">
         <AmbientBackdrop theme={scene.theme} />
+        <SceneMotes theme={scene.theme} />
 
         {scene.media.kind === 'layered' ? (
           <div ref={parallaxRef} className="parallax-root absolute inset-0 z-10">
@@ -921,19 +1208,12 @@ export function StoryScene({ scene }: { scene: Scene }) {
         <div className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_78%_82%,rgba(var(--color-primary),0.1),transparent_44%)]" />
       </div>
 
-      <div className="absolute left-[calc(1rem+env(safe-area-inset-left))] top-[calc(1rem+env(safe-area-inset-top))] z-40 flex items-center gap-3 animate-fade-in">
-        <div className="relative h-12 w-12 rounded-full border border-[rgba(var(--color-accent),0.56)] bg-[rgba(var(--color-secondary),0.42)] shadow-lg shadow-black/45">
-          <div className="animate-pulse-slow absolute inset-0 rounded-full bg-[rgba(var(--color-primary),0.24)]" />
-          <span className="absolute inset-0 flex items-center justify-center text-xl font-bold text-[rgba(var(--color-accent),0.98)]">
-            {scene.id}
-          </span>
-        </div>
-        <div className="rounded-full border border-[rgba(var(--color-accent),0.32)] bg-[rgba(var(--color-secondary),0.28)] px-3 py-1.5 backdrop-blur-sm">
-          <p className="text-sm font-semibold text-[rgba(var(--color-accent),0.94)]">Escena {scene.id}</p>
-        </div>
-      </div>
+      <SceneHud scene={scene} progressValue={progressValue} />
+      <SceneTitleReveal key={`title-${scene.id}`} scene={scene} visible={!prefersReducedMotion} />
 
       <DraggableStoryPanel scene={scene} visible={textVisible} />
+      {guideMessage ? <StoryGuide message={guideMessage} onDismiss={() => setGuideMessage(null)} /> : null}
+      <SceneJourney scene={scene} progressValue={progressValue} />
 
       <div className="absolute bottom-0 left-0 right-0 z-[32] h-2 bg-[rgba(18,11,7,0.7)] backdrop-blur-sm">
         <div

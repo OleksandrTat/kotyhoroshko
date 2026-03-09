@@ -90,6 +90,7 @@ export function NextButton({
       type="button"
     >
       <span className="absolute inset-0 translate-x-[-120%] bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.28),transparent)] transition-transform duration-700 group-hover:translate-x-[120%]" />
+      <span className="animate-accent-sweep absolute inset-y-0 left-0 w-16 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)] opacity-70" />
       <span className="relative z-10">{label}</span>
       <svg
         className="relative z-10 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1.5 group-hover:scale-110 sm:h-6 sm:w-6"
