@@ -23,11 +23,7 @@ export function navigateWithPageTurn(navigate: () => void, options: PageTurnOpti
   const root = document.documentElement
   root.dataset.pageTurn = direction
 
-  if (options.durationMs) {
-    root.style.setProperty('--page-turn-duration', `${options.durationMs}ms`)
-  } else {
-    root.style.removeProperty('--page-turn-duration')
-  }
+  root.style.setProperty('--page-turn-duration', `${options.durationMs ?? 980}ms`)
 
   const cleanup = () => {
     delete root.dataset.pageTurn
