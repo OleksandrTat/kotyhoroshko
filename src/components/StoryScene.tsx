@@ -85,20 +85,76 @@ const THEME_STYLES: Record<
   },
 }
 
+type GamePoint = { x: number; y: number }
+
 const COLLECT_TARGETS = [
-  { top: '18%', left: '16%' },
-  { top: '28%', left: '72%' },
-  { top: '66%', left: '28%' },
+  { x: 0.16, y: 0.24, ax: 0.08, ay: 0.06, speed: 1.35, phase: 0.15, size: 58 },
+  { x: 0.32, y: 0.64, ax: 0.06, ay: 0.08, speed: 1.05, phase: 0.8, size: 64 },
+  { x: 0.48, y: 0.36, ax: 0.09, ay: 0.05, speed: 1.55, phase: 1.4, size: 54 },
+  { x: 0.62, y: 0.72, ax: 0.08, ay: 0.05, speed: 1.2, phase: 2.1, size: 60 },
+  { x: 0.76, y: 0.24, ax: 0.07, ay: 0.08, speed: 1.45, phase: 2.8, size: 62 },
+  { x: 0.84, y: 0.56, ax: 0.05, ay: 0.06, speed: 1.7, phase: 3.4, size: 56 },
 ] as const
 
 const TRAIL_TARGETS = [
-  { top: '64%', left: '14%' },
-  { top: '44%', left: '44%' },
-  { top: '24%', left: '76%' },
+  { x: 0.14, y: 0.76 },
+  { x: 0.3, y: 0.58 },
+  { x: 0.46, y: 0.66 },
+  { x: 0.6, y: 0.44 },
+  { x: 0.78, y: 0.24 },
 ] as const
 
 const DRAG_TOKEN_SIZE = 76
-const DRAG_GOAL = { left: 0.72, top: 0.18, width: 0.18, height: 0.24 } as const
+const DRAG_START = { x: 0.1, y: 0.74 } as const
+const DRAG_CHECKPOINTS = [
+  { x: 0.3, y: 0.68 },
+  { x: 0.46, y: 0.44 },
+  { x: 0.66, y: 0.56 },
+] as const
+const DRAG_GOAL_POINT = { x: 0.82, y: 0.22 } as const
+const GAME_SECONDARY_BUTTON_CLASS =
+  'inline-flex min-h-12 items-center justify-center rounded-[1.1rem] border border-[rgba(var(--color-accent),0.24)] bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm font-semibold text-[rgba(var(--color-accent),0.9)] transition-all duration-300 hover:scale-[1.01] hover:bg-[rgba(255,255,255,0.08)]'
+const GAME_PRIMARY_BUTTON_CLASS =
+  'button-primary btn-glow inline-flex min-h-12 items-center justify-center rounded-[1.1rem] px-4 py-3 text-sm font-bold hover:scale-[1.02]'
+
+function clampValue(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
+}
+
+function distanceBetween(a: GamePoint, b: GamePoint) {
+  return Math.hypot(a.x - b.x, a.y - b.y)
+}
+
+function distanceToSegment(point: GamePoint, start: GamePoint, end: GamePoint) {
+  const dx = end.x - start.x
+  const dy = end.y - start.y
+
+  if (dx === 0 && dy === 0) {
+    return distanceBetween(point, start)
+  }
+
+  const ratio = clampValue(
+    ((point.x - start.x) * dx + (point.y - start.y) * dy) / (dx * dx + dy * dy),
+    0,
+    1,
+  )
+
+  return distanceBetween(point, {
+    x: start.x + dx * ratio,
+    y: start.y + dy * ratio,
+  })
+}
+
+function getNormalizedPoint(rect: DOMRect, clientX: number, clientY: number): GamePoint {
+  return {
+    x: clampValue((clientX - rect.left) / rect.width, 0, 1),
+    y: clampValue((clientY - rect.top) / rect.height, 0, 1),
+  }
+}
+
+function toViewBoxPoint(point: GamePoint) {
+  return `${point.x * 100},${point.y * 100}`
+}
 
 const THEME_META: Record<
   SceneTheme,
@@ -374,6 +430,11 @@ function GameShell({
   badge,
   status,
   successText,
+  helperText = 'Ayuda a Kotyhoroshko con este reto corto. Si quieres, puedes volver a empezar o cerrar el juego y seguir el cuento.',
+  progressValue,
+  onRestart,
+  onClose,
+  closeLabel = 'Seguir sin jugar',
   children,
 }: {
   title: string
@@ -381,20 +442,85 @@ function GameShell({
   badge: string
   status?: string
   successText?: string
+  helperText?: string
+  progressValue?: number
+  onRestart?: () => void
+  onClose?: () => void
+  closeLabel?: string
   children: React.ReactNode
 }) {
+  const normalizedProgress =
+    typeof progressValue === 'number' ? Math.min(Math.max(progressValue, 0), 100) : null
+
   return (
     <div className="pointer-events-auto w-full max-w-lg rounded-[1.9rem] border border-[rgba(var(--color-accent),0.34)] bg-[linear-gradient(145deg,rgba(35,21,13,0.94),rgba(18,10,7,0.92))] p-6 text-left shadow-[0_24px_70px_rgba(0,0,0,0.52)] backdrop-blur-2xl sm:p-7">
-      <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(var(--color-accent),0.2)] bg-[rgba(var(--color-secondary),0.22)] px-3 py-1 text-[11px] uppercase tracking-[0.26em] text-[rgba(var(--color-accent),0.74)]">
-        {badge}
-      </span>
-      <h2 className="mt-4 text-4xl leading-none text-[rgba(var(--color-accent),0.98)] sm:text-5xl" style={{ fontFamily: 'var(--font-display)' }}>
-        {title}
-      </h2>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(var(--color-accent),0.2)] bg-[rgba(var(--color-secondary),0.22)] px-3 py-1 text-[11px] uppercase tracking-[0.26em] text-[rgba(var(--color-accent),0.74)]">
+            {badge}
+          </span>
+          <h2 className="mt-4 text-4xl leading-none text-[rgba(var(--color-accent),0.98)] sm:text-5xl" style={{ fontFamily: 'var(--font-display)' }}>
+            {title}
+          </h2>
+        </div>
+
+        {onClose ? (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar mini juego"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[rgba(var(--color-accent),0.18)] bg-[rgba(255,255,255,0.04)] text-[rgba(var(--color-accent),0.88)] transition-all duration-300 hover:scale-105 hover:bg-[rgba(255,255,255,0.08)]"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M6 6l12 12M18 6l-12 12" />
+            </svg>
+          </button>
+        ) : null}
+      </div>
       <p className="mt-4 text-base leading-relaxed text-[rgba(var(--color-accent),0.86)] sm:text-lg">{description}</p>
+      <div className="mt-4 rounded-[1.35rem] border border-[rgba(var(--color-accent),0.14)] bg-[linear-gradient(145deg,rgba(255,225,174,0.08),rgba(255,255,255,0.02))] px-4 py-4">
+        <div className="flex items-start gap-3">
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgba(var(--color-secondary),0.24)] text-sm font-bold text-[rgba(var(--color-accent),0.95)]">
+            *
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-[rgba(var(--color-accent),0.62)]">Pausa de cuento</p>
+            <p className="mt-2 text-sm leading-relaxed text-[rgba(var(--color-accent),0.84)] sm:text-base">{helperText}</p>
+          </div>
+        </div>
+
+        {normalizedProgress !== null ? (
+          <div className="mt-4">
+            <div className="flex items-center justify-between gap-3 text-[11px] uppercase tracking-[0.22em] text-[rgba(var(--color-accent),0.62)]">
+              <span>Progreso</span>
+              <span>{Math.round(normalizedProgress)}%</span>
+            </div>
+            <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-[rgba(255,255,255,0.08)]">
+              <div
+                className="h-full rounded-full bg-[linear-gradient(90deg,rgba(255,236,204,0.98),rgba(244,188,85,0.96),rgba(214,134,76,0.94))] transition-[width] duration-300"
+                style={{ width: `${normalizedProgress}%` }}
+              />
+            </div>
+          </div>
+        ) : null}
+      </div>
       {status ? <p className="mt-4 text-sm uppercase tracking-[0.22em] text-[rgba(var(--color-accent),0.68)]">{status}</p> : null}
       <div className="mt-5">{children}</div>
       {successText ? <p className="mt-5 text-sm uppercase tracking-[0.22em] text-[rgba(205,255,170,0.86)]">{successText}</p> : null}
+      {onRestart || onClose ? (
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {onRestart ? (
+            <button type="button" onClick={onRestart} className={GAME_SECONDARY_BUTTON_CLASS}>
+              Empezar de nuevo
+            </button>
+          ) : null}
+          {onClose ? (
+            <button type="button" onClick={onClose} className={onRestart ? GAME_SECONDARY_BUTTON_CLASS : GAME_PRIMARY_BUTTON_CLASS}>
+              {closeLabel}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -402,11 +528,16 @@ function GameShell({
 function CollectGameOverlay({
   game,
   onComplete,
+  onRestart,
+  onClose,
 }: {
   game: CollectGame
   onComplete: () => void
+  onRestart: () => void
+  onClose: () => void
 }) {
   const [collected, setCollected] = useState<number[]>([])
+  const [time, setTime] = useState(0)
   const completeRef = useRef(false)
   const isDone = collected.length === COLLECT_TARGETS.length
   const gradient =
@@ -417,12 +548,25 @@ function CollectGameOverlay({
         : 'bg-[radial-gradient(circle_at_30%_30%,rgba(227,255,198,0.95),rgba(149,226,69,0.94)_58%,rgba(62,130,26,0.96)_100%)] shadow-[0_0_30px_rgba(152,226,79,0.55)]'
 
   useEffect(() => {
+    let frameId = 0
+    const start = performance.now()
+
+    const animate = (now: number) => {
+      setTime((now - start) / 1000)
+      frameId = window.requestAnimationFrame(animate)
+    }
+
+    frameId = window.requestAnimationFrame(animate)
+    return () => window.cancelAnimationFrame(frameId)
+  }, [])
+
+  useEffect(() => {
     if (!isDone || completeRef.current) {
       return
     }
 
     completeRef.current = true
-    const timeoutId = window.setTimeout(onComplete, 280)
+    const timeoutId = window.setTimeout(onComplete, 650)
     return () => window.clearTimeout(timeoutId)
   }, [isDone, onComplete])
 
@@ -434,14 +578,44 @@ function CollectGameOverlay({
     <GameShell
       title={game.title}
       description={game.description}
-      badge="Juego corto"
-      status={`${collected.length} / ${COLLECT_TARGETS.length}`}
-      successText={isDone ? 'Muy bien. La escena ya puede seguir.' : undefined}
+      badge="Caza de luces"
+      status={isDone ? 'Todas atrapadas' : `Atrapa ${COLLECT_TARGETS.length - collected.length} luces mas`}
+      successText={isDone ? 'Atrapaste todas las luces. La escena ya puede seguir.' : undefined}
+      helperText="Las luces magicas no se quedan quietas. Tocarlas mientras bailan es mucho mas divertido."
+      progressValue={(collected.length / COLLECT_TARGETS.length) * 100}
+      onRestart={onRestart}
+      onClose={onClose}
     >
-      <div className="relative h-56 overflow-hidden rounded-[1.6rem] border border-[rgba(var(--color-accent),0.18)] bg-[linear-gradient(180deg,rgba(18,11,7,0.92),rgba(9,5,3,0.96))]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(255,225,174,0.12),transparent_34%)]" />
+      <div className="relative h-64 overflow-hidden rounded-[1.6rem] border border-[rgba(var(--color-accent),0.18)] bg-[linear-gradient(180deg,rgba(18,11,7,0.92),rgba(9,5,3,0.96))]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(255,225,174,0.16),transparent_34%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.06),transparent_26%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_20%,rgba(255,255,255,0.05),transparent_24%)]" />
+
+        <div className="absolute left-4 top-4 flex gap-2">
+          {COLLECT_TARGETS.map((_, index) => (
+            <span
+              key={index}
+              className={`h-3 w-3 rounded-full transition-all duration-300 ${
+                collected.includes(index)
+                  ? 'bg-[rgba(205,255,170,0.92)] shadow-[0_0_16px_rgba(152,226,79,0.6)]'
+                  : 'bg-[rgba(255,255,255,0.14)]'
+              }`}
+            />
+          ))}
+        </div>
+
         {COLLECT_TARGETS.map((target, index) => {
           const hidden = collected.includes(index)
+          const left = clampValue(
+            target.x + Math.sin(time * target.speed + target.phase) * target.ax,
+            0.08,
+            0.92,
+          )
+          const top = clampValue(
+            target.y + Math.cos(time * target.speed * 1.15 + target.phase) * target.ay,
+            0.12,
+            0.84,
+          )
 
           return (
             <button
@@ -449,17 +623,24 @@ function CollectGameOverlay({
               type="button"
               onClick={() => handleCollect(index)}
               aria-label={`${game.targetLabel} ${index + 1}`}
-              className={`absolute h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(var(--color-accent),0.4)] transition-all duration-300 ${gradient} ${
-                hidden ? 'pointer-events-none scale-0 opacity-0' : 'animate-float animate-soft-pulse hover:scale-110'
+              className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(var(--color-accent),0.4)] transition-all duration-300 ${gradient} ${
+                hidden ? 'pointer-events-none scale-0 opacity-0' : 'hover:scale-110 active:scale-95'
               }`}
-              style={{ top: target.top, left: target.left, animationDelay: `${index * 0.2}s` }}
+              style={{
+                top: `${top * 100}%`,
+                left: `${left * 100}%`,
+                width: `${target.size}px`,
+                height: `${target.size}px`,
+              }}
             >
               <span className="absolute inset-1 rounded-full bg-[radial-gradient(circle_at_40%_35%,rgba(255,255,255,0.94),transparent_40%)]" />
+              <span className="absolute inset-0 animate-ping-slow rounded-full border border-white/30" />
+              <span className="absolute inset-[-8px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.18),transparent_65%)]" />
             </button>
           )
         })}
       </div>
-      <p className="mt-4 text-sm text-[rgba(var(--color-accent),0.76)]">Toca cada brillo para despertar la escena.</p>
+      <p className="mt-4 text-sm text-[rgba(var(--color-accent),0.76)]">Las luces flotan por toda la escena. Si una se te escapa, espera un momento y vuelve a atraparla.</p>
     </GameShell>
   )
 }
@@ -467,14 +648,22 @@ function CollectGameOverlay({
 function TrailGameOverlay({
   game,
   onComplete,
+  onRestart,
+  onClose,
 }: {
   game: TrailGame
   onComplete: () => void
+  onRestart: () => void
+  onClose: () => void
 }) {
-  const [nextStep, setNextStep] = useState(0)
-  const [hint, setHint] = useState('Empieza por la huella número 1.')
+  const boardRef = useRef<HTMLDivElement>(null)
   const completeRef = useRef(false)
-  const isDone = nextStep === TRAIL_TARGETS.length
+  const [nextStep, setNextStep] = useState(1)
+  const [hint, setHint] = useState('Empieza en la primera huella y desliza el dedo hasta la siguiente.')
+  const [isTracing, setIsTracing] = useState(false)
+  const [pointerPoint, setPointerPoint] = useState<GamePoint | null>(null)
+  const lastIndex = TRAIL_TARGETS.length - 1
+  const isDone = nextStep > lastIndex
 
   useEffect(() => {
     if (!isDone || completeRef.current) {
@@ -482,55 +671,158 @@ function TrailGameOverlay({
     }
 
     completeRef.current = true
-    const timeoutId = window.setTimeout(onComplete, 320)
+    const timeoutId = window.setTimeout(onComplete, 650)
     return () => window.clearTimeout(timeoutId)
   }, [isDone, onComplete])
 
-  const handleTap = useCallback((index: number) => {
-    setNextStep((current) => {
-      if (index !== current) {
-        setHint('Ups. Vuelve a empezar desde la primera huella.')
-        return 0
-      }
+  const updatePointer = useCallback((clientX: number, clientY: number) => {
+    const board = boardRef.current
+    if (!board || isDone) {
+      return
+    }
 
-      const nextValue = current + 1
-      setHint(nextValue === TRAIL_TARGETS.length ? 'Camino encontrado.' : `Muy bien. Sigue con la huella número ${nextValue + 1}.`)
-      return nextValue
-    })
+    const point = getNormalizedPoint(board.getBoundingClientRect(), clientX, clientY)
+    const start = TRAIL_TARGETS[nextStep - 1]
+    const target = TRAIL_TARGETS[nextStep]
+
+    if (!start || !target) {
+      return
+    }
+
+    if (distanceToSegment(point, start, target) > 0.18) {
+      setHint('Sigue el caminito brillante y no te vayas al bosque.')
+      return
+    }
+
+    setPointerPoint(point)
+
+    if (distanceBetween(point, target) <= 0.095) {
+      const nextValue = nextStep + 1
+      setNextStep(nextValue)
+      setPointerPoint(null)
+      setIsTracing(false)
+      setHint(nextValue > lastIndex ? 'Camino encontrado.' : `Muy bien. Ahora ve a la huella ${nextValue + 1}.`)
+    }
+  }, [isDone, lastIndex, nextStep])
+
+  const handlePointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if (isDone) {
+      return
+    }
+
+    const board = boardRef.current
+    if (!board) {
+      return
+    }
+
+    const point = getNormalizedPoint(board.getBoundingClientRect(), event.clientX, event.clientY)
+    const start = TRAIL_TARGETS[nextStep - 1]
+    if (!start || distanceBetween(point, start) > 0.11) {
+      setHint(`Empieza desde la huella ${nextStep}.`)
+      return
+    }
+
+    setIsTracing(true)
+    setPointerPoint(point)
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }, [isDone, nextStep])
+
+  const handlePointerMove = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!isTracing) {
+      return
+    }
+
+    updatePointer(event.clientX, event.clientY)
+  }, [isTracing, updatePointer])
+
+  const handlePointerEnd = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+
+    setIsTracing(false)
+    setPointerPoint(null)
   }, [])
+
+  const completedPoints = TRAIL_TARGETS.slice(0, isDone ? TRAIL_TARGETS.length : nextStep)
+  const livePoints =
+    isTracing && pointerPoint
+      ? [...TRAIL_TARGETS.slice(0, nextStep), pointerPoint]
+      : completedPoints
+  const progressValue = ((Math.min(nextStep - 1, lastIndex)) / lastIndex) * 100
 
   return (
     <GameShell
       title={game.title}
       description={game.description}
-      badge="Sigue el camino"
-      status={isDone ? 'Camino listo' : `Paso ${Math.min(nextStep + 1, TRAIL_TARGETS.length)} de ${TRAIL_TARGETS.length}`}
-      successText={isDone ? 'Los hermanos ya ven por dónde seguir.' : undefined}
+      badge="Senda magica"
+      status={isDone ? 'Camino listo' : `Huella ${nextStep} de ${lastIndex}`}
+      successText={isDone ? 'Camino listo. Ya podeis seguir la pista.' : undefined}
+      helperText="Esta vez no solo tocas: arrastras el dedo de huella en huella para descubrir el camino."
+      progressValue={progressValue}
+      onRestart={onRestart}
+      onClose={onClose}
     >
-      <div className="relative h-56 overflow-hidden rounded-[1.6rem] border border-[rgba(var(--color-accent),0.18)] bg-[linear-gradient(180deg,rgba(13,15,9,0.94),rgba(6,8,5,0.98))]">
-        <div className="absolute left-[14%] top-[64%] h-1 w-[34%] -rotate-[18deg] rounded-full bg-[rgba(var(--color-accent),0.24)]" />
-        <div className="absolute left-[44%] top-[44%] h-1 w-[34%] -rotate-[18deg] rounded-full bg-[rgba(var(--color-accent),0.24)]" />
+      <div
+        ref={boardRef}
+        className="relative h-64 overflow-hidden rounded-[1.6rem] border border-[rgba(var(--color-accent),0.18)] bg-[linear-gradient(180deg,rgba(13,15,9,0.94),rgba(6,8,5,0.98))]"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerEnd}
+        onPointerCancel={handlePointerEnd}
+        style={{ touchAction: 'none' }}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(188,236,164,0.08),transparent_22%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_74%_24%,rgba(255,225,174,0.08),transparent_24%)]" />
+
+        <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
+          <polyline
+            points={TRAIL_TARGETS.map(toViewBoxPoint).join(' ')}
+            fill="none"
+            stroke="rgba(255,225,174,0.16)"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="5"
+            strokeDasharray="4 5"
+          />
+          <polyline
+            points={completedPoints.map(toViewBoxPoint).join(' ')}
+            fill="none"
+            stroke="rgba(205,255,170,0.86)"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="5.5"
+          />
+          {livePoints.length > 1 ? (
+            <polyline
+              points={livePoints.map(toViewBoxPoint).join(' ')}
+              fill="none"
+              stroke="rgba(255,225,174,0.9)"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="3.5"
+            />
+          ) : null}
+        </svg>
+
         {TRAIL_TARGETS.map((target, index) => {
           const completed = index < nextStep
-          const active = index === nextStep
+          const active = index === nextStep && !isDone
 
           return (
-            <button
+            <div
               key={index}
-              type="button"
-              onClick={() => handleTap(index)}
-              aria-label={`${game.stepLabel} ${index + 1}`}
-              className={`absolute flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border text-lg font-bold transition-all duration-300 ${
+              className={`absolute flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border text-base font-bold transition-all duration-300 ${
                 completed
                   ? 'border-[rgba(205,255,170,0.66)] bg-[rgba(112,188,54,0.86)] text-[#14220b]'
                   : active
-                    ? 'border-[rgba(var(--color-accent),0.7)] bg-[rgba(var(--color-secondary),0.82)] text-[#2a170b]'
+                    ? 'animate-soft-pulse border-[rgba(var(--color-accent),0.7)] bg-[rgba(var(--color-secondary),0.82)] text-[#2a170b]'
                     : 'border-[rgba(var(--color-accent),0.28)] bg-[rgba(12,9,6,0.84)] text-[rgba(var(--color-accent),0.88)]'
               }`}
-              style={{ top: target.top, left: target.left }}
+              style={{ left: `${target.x * 100}%`, top: `${target.y * 100}%` }}
             >
               {index + 1}
-            </button>
+            </div>
           )
         })}
       </div>
@@ -542,17 +834,22 @@ function TrailGameOverlay({
 function DragGameOverlay({
   game,
   onComplete,
+  onRestart,
+  onClose,
 }: {
   game: DragGame
   onComplete: () => void
+  onRestart: () => void
+  onClose: () => void
 }) {
   const boardRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<{ pointerId: number; offsetX: number; offsetY: number } | null>(null)
   const completeRef = useRef(false)
-  const [position, setPosition] = useState({ x: 0.08, y: 0.68 })
+  const [position, setPosition] = useState<GamePoint>(DRAG_START)
+  const [nextCheckpoint, setNextCheckpoint] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
-  const [isDone, setIsDone] = useState(false)
-  const [hint, setHint] = useState('Arrastra el arado hasta el aro brillante.')
+  const [hint, setHint] = useState('Lleva el arado por las marcas doradas y termina en el gran aro final.')
+  const isDone = nextCheckpoint > DRAG_CHECKPOINTS.length
 
   useEffect(() => {
     if (!isDone || completeRef.current) {
@@ -560,7 +857,7 @@ function DragGameOverlay({
     }
 
     completeRef.current = true
-    const timeoutId = window.setTimeout(onComplete, 320)
+    const timeoutId = window.setTimeout(onComplete, 650)
     return () => window.clearTimeout(timeoutId)
   }, [isDone, onComplete])
 
@@ -575,36 +872,27 @@ function DragGameOverlay({
     const maxY = Math.max(rect.height - DRAG_TOKEN_SIZE, 1)
     const nextX = Math.min(Math.max(clientX - rect.left - offsetX, 0), maxX)
     const nextY = Math.min(Math.max(clientY - rect.top - offsetY, 0), maxY)
-    setPosition({ x: nextX / maxX, y: nextY / maxY })
-  }, [])
+    const nextPosition = { x: nextX / maxX, y: nextY / maxY }
+    setPosition(nextPosition)
 
-  const finishDrag = useCallback(() => {
-    const board = boardRef.current
-    if (!board) {
+    if (nextCheckpoint < DRAG_CHECKPOINTS.length) {
+      if (distanceBetween(nextPosition, DRAG_CHECKPOINTS[nextCheckpoint]) <= 0.11) {
+        const nextValue = nextCheckpoint + 1
+        setNextCheckpoint(nextValue)
+        setHint(
+          nextValue === DRAG_CHECKPOINTS.length
+            ? 'Muy bien. Ya solo falta llevar el arado al aro final.'
+            : `Excelente. Ahora busca la marca ${nextValue + 1}.`,
+        )
+      }
       return
     }
 
-    const rect = board.getBoundingClientRect()
-    const maxX = Math.max(rect.width - DRAG_TOKEN_SIZE, 1)
-    const maxY = Math.max(rect.height - DRAG_TOKEN_SIZE, 1)
-    const centerX = (position.x * maxX + DRAG_TOKEN_SIZE / 2) / rect.width
-    const centerY = (position.y * maxY + DRAG_TOKEN_SIZE / 2) / rect.height
-
-    setIsDragging(false)
-
-    if (
-      centerX >= DRAG_GOAL.left &&
-      centerX <= DRAG_GOAL.left + DRAG_GOAL.width &&
-      centerY >= DRAG_GOAL.top &&
-      centerY <= DRAG_GOAL.top + DRAG_GOAL.height
-    ) {
-      setHint('Perfecto. El surco ya está trazado.')
-      setIsDone(true)
-      return
+    if (distanceBetween(nextPosition, DRAG_GOAL_POINT) <= 0.12) {
+      setNextCheckpoint(DRAG_CHECKPOINTS.length + 1)
+      setHint('Surco completo. Los hermanos ya pueden seguir trabajando.')
     }
-
-    setHint('Casi. Llévalo hasta el aro brillante del final.')
-  }, [position.x, position.y])
+  }, [nextCheckpoint])
 
   const handlePointerDown = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
     if (isDone) {
@@ -637,24 +925,78 @@ function DragGameOverlay({
     }
 
     dragRef.current = null
+    setIsDragging(false)
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
-    finishDrag()
-  }, [finishDrag])
+  }, [])
+
+  const progressValue = (Math.min(nextCheckpoint, DRAG_CHECKPOINTS.length + 1) / (DRAG_CHECKPOINTS.length + 1)) * 100
 
   return (
     <GameShell
       title={game.title}
       description={game.description}
-      badge="Arrastra"
-      status={isDone ? 'Listo' : isDragging ? 'Moviendo el arado' : 'Lleva la pieza al final'}
-      successText={isDone ? 'Ya puedes ver cómo sigue el trabajo.' : undefined}
+      badge="Manos al arado"
+      status={
+        isDone
+          ? 'Surco completo'
+          : nextCheckpoint === DRAG_CHECKPOINTS.length
+            ? 'Lleva el arado al aro final'
+            : `Marca ${nextCheckpoint + 1} de ${DRAG_CHECKPOINTS.length}`
+      }
+      successText={isDone ? 'Perfecto. El surco ya esta listo.' : undefined}
+      helperText="El arado ahora tiene un recorrido de verdad: toca las marcas doradas y despues ve al final."
+      progressValue={progressValue}
+      onRestart={onRestart}
+      onClose={onClose}
     >
-      <div ref={boardRef} className="relative h-56 overflow-hidden rounded-[1.6rem] border border-[rgba(var(--color-accent),0.18)] bg-[linear-gradient(180deg,rgba(42,30,18,0.94),rgba(18,12,7,0.98))]">
-        <div className="absolute inset-y-0 left-[22%] w-[10%] -skew-x-12 bg-[rgba(74,44,19,0.65)]" />
-        <div className="absolute inset-y-0 left-[46%] w-[8%] -skew-x-12 bg-[rgba(98,62,29,0.5)]" />
-        <div className="absolute left-[72%] top-[18%] h-[24%] w-[18%] rounded-[1.4rem] border-2 border-dashed border-[rgba(var(--color-accent),0.7)] bg-[rgba(var(--color-secondary),0.18)]" />
+      <div ref={boardRef} className="relative h-64 overflow-hidden rounded-[1.6rem] border border-[rgba(var(--color-accent),0.18)] bg-[linear-gradient(180deg,rgba(42,30,18,0.94),rgba(18,12,7,0.98))]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,225,174,0.08),transparent_22%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_18%,rgba(255,225,174,0.08),transparent_24%)]" />
+
+        <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
+          <polyline
+            points={[DRAG_START, ...DRAG_CHECKPOINTS, DRAG_GOAL_POINT].map(toViewBoxPoint).join(' ')}
+            fill="none"
+            stroke="rgba(255,225,174,0.18)"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="6"
+            strokeDasharray="5 6"
+          />
+        </svg>
+
+        {DRAG_CHECKPOINTS.map((checkpoint, index) => {
+          const reached = index < nextCheckpoint
+          const active = index === nextCheckpoint && !isDone
+
+          return (
+            <div
+              key={index}
+              className={`absolute h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 ${
+                reached
+                  ? 'border-[rgba(205,255,170,0.92)] bg-[rgba(112,188,54,0.86)] shadow-[0_0_18px_rgba(152,226,79,0.55)]'
+                  : active
+                    ? 'animate-soft-pulse border-[rgba(var(--color-accent),0.82)] bg-[rgba(var(--color-secondary),0.72)]'
+                    : 'border-[rgba(var(--color-accent),0.34)] bg-[rgba(255,255,255,0.05)]'
+              }`}
+              style={{ left: `${checkpoint.x * 100}%`, top: `${checkpoint.y * 100}%` }}
+            />
+          )
+        })}
+
+        <div
+          className={`absolute flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-dashed text-[11px] font-bold uppercase tracking-[0.18em] ${
+            nextCheckpoint === DRAG_CHECKPOINTS.length
+              ? 'border-[rgba(205,255,170,0.92)] bg-[rgba(112,188,54,0.18)] text-[rgba(205,255,170,0.92)]'
+              : 'border-[rgba(var(--color-accent),0.7)] bg-[rgba(var(--color-secondary),0.18)] text-[rgba(var(--color-accent),0.82)]'
+          }`}
+          style={{ left: `${DRAG_GOAL_POINT.x * 100}%`, top: `${DRAG_GOAL_POINT.y * 100}%` }}
+        >
+          Final
+        </div>
+
         <button
           type="button"
           aria-label={game.tokenLabel}
@@ -682,26 +1024,30 @@ function DragGameOverlay({
 function HoldGameOverlay({
   game,
   onComplete,
+  onRestart,
+  onClose,
 }: {
   game: HoldGame
   onComplete: () => void
+  onRestart: () => void
+  onClose: () => void
 }) {
   const completeRef = useRef(false)
-  const [holding, setHolding] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [tapCount, setTapCount] = useState(0)
   const isDone = progress >= 100
 
   useEffect(() => {
-    if (!holding || isDone) {
+    if (isDone) {
       return
     }
 
     const intervalId = window.setInterval(() => {
-      setProgress((current) => Math.min(100, current + 7))
-    }, 80)
+      setProgress((current) => Math.max(0, current - 3))
+    }, 140)
 
     return () => window.clearInterval(intervalId)
-  }, [holding, isDone])
+  }, [isDone])
 
   useEffect(() => {
     if (!isDone || completeRef.current) {
@@ -709,70 +1055,151 @@ function HoldGameOverlay({
     }
 
     completeRef.current = true
-    const timeoutId = window.setTimeout(onComplete, 320)
+    const timeoutId = window.setTimeout(onComplete, 650)
     return () => window.clearTimeout(timeoutId)
   }, [isDone, onComplete])
 
-  const stopHolding = useCallback(() => setHolding(false), [])
+  const handleBoost = useCallback(() => {
+    if (isDone) {
+      return
+    }
+
+    setTapCount((current) => current + 1)
+    setProgress((current) => Math.min(100, current + 14))
+  }, [isDone])
+
+  const strengthLabel =
+    progress < 34
+      ? 'La roca casi no se mueve'
+      : progress < 68
+        ? 'La roca ya empieza a ceder'
+        : 'Ya casi la levantas'
 
   return (
     <GameShell
       title={game.title}
       description={game.description}
-      badge="Mantén pulsado"
-      status={isDone ? 'Roca levantada' : `Fuerza ${Math.round(progress)}%`}
-      successText={isDone ? 'Kotyhoroshko ya puede levantar la roca.' : undefined}
+      badge="Empujon heroico"
+      status={isDone ? 'Roca levantada' : strengthLabel}
+      successText={isDone ? 'Muy bien. Kotyhoroshko ya puede levantar la roca.' : undefined}
+      helperText="Aqui la fuerza se gana con empujones rapidos. Toca sin parar y no dejes que la barra baje."
+      progressValue={progress}
+      onRestart={onRestart}
+      onClose={onClose}
     >
       <div className="rounded-[1.6rem] border border-[rgba(var(--color-accent),0.18)] bg-[linear-gradient(180deg,rgba(24,12,8,0.94),rgba(9,5,4,0.98))] p-5">
         <div className="h-4 overflow-hidden rounded-full bg-[rgba(255,255,255,0.08)]">
           <div className="h-full rounded-full bg-[linear-gradient(90deg,rgba(255,225,174,0.98),rgba(214,134,76,0.96))] transition-[width] duration-150" style={{ width: `${progress}%` }} />
         </div>
+        <div className="relative mt-5 h-32 overflow-hidden rounded-[1.4rem] border border-[rgba(var(--color-accent),0.18)] bg-[linear-gradient(180deg,rgba(54,31,18,0.82),rgba(19,10,6,0.96))]">
+          <div className="absolute inset-x-0 bottom-0 h-10 bg-[linear-gradient(180deg,rgba(32,17,9,0),rgba(32,17,9,0.95))]" />
+          <div className="absolute left-1/2 top-[14%] h-14 w-14 -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,225,174,0.2),transparent_70%)]" />
+          <div
+            className="absolute left-1/2 top-[30%] h-16 w-40 -translate-x-1/2 rounded-[45%] border border-[rgba(var(--color-accent),0.22)] bg-[linear-gradient(180deg,rgba(123,110,102,0.92),rgba(70,59,54,0.98))] shadow-[0_18px_30px_rgba(0,0,0,0.32)] transition-transform duration-150"
+            style={{ transform: `translateX(-50%) translateY(${28 - progress * 0.22}px)` }}
+          >
+            <div className="absolute inset-[12%] rounded-[45%] bg-[radial-gradient(circle_at_30%_28%,rgba(255,255,255,0.16),transparent_28%),linear-gradient(180deg,rgba(145,131,123,0.88),rgba(84,71,66,0.94))]" />
+          </div>
+          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2">
+            {[0, 1, 2].map((spark) => (
+              <span
+                key={spark}
+                className={`h-3 w-3 rounded-full transition-all duration-300 ${
+                  progress > spark * 30 + 8
+                    ? 'bg-[rgba(255,225,174,0.96)] shadow-[0_0_14px_rgba(255,225,174,0.55)]'
+                    : 'bg-[rgba(255,255,255,0.12)]'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
         <button
           type="button"
           aria-label={game.actionLabel}
-          onPointerDown={(event) => {
-            if (isDone) {
-              return
-            }
-            setHolding(true)
-            event.currentTarget.setPointerCapture(event.pointerId)
-          }}
-          onPointerUp={(event) => {
-            stopHolding()
-            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-              event.currentTarget.releasePointerCapture(event.pointerId)
-            }
-          }}
-          onPointerCancel={stopHolding}
-          onLostPointerCapture={stopHolding}
-          className={`mt-5 flex h-36 w-full items-center justify-center rounded-[1.5rem] border border-[rgba(var(--color-accent),0.42)] bg-[radial-gradient(circle_at_top,rgba(255,225,174,0.26),rgba(84,46,23,0.82)_62%,rgba(28,14,8,0.96)_100%)] text-2xl font-bold text-[rgba(var(--color-accent),0.96)] shadow-[0_20px_50px_rgba(0,0,0,0.34)] ${holding && !isDone ? 'scale-[1.02]' : 'hover:scale-[1.01]'}`}
+          onPointerDown={handleBoost}
+          className="mt-5 flex h-28 w-full items-center justify-center rounded-[1.5rem] border border-[rgba(var(--color-accent),0.42)] bg-[radial-gradient(circle_at_top,rgba(255,225,174,0.26),rgba(84,46,23,0.82)_62%,rgba(28,14,8,0.96)_100%)] text-2xl font-bold text-[rgba(var(--color-accent),0.96)] shadow-[0_20px_50px_rgba(0,0,0,0.34)] hover:scale-[1.01] active:scale-[0.99]"
         >
-          {isDone ? 'Muy bien' : holding ? 'Sigue así' : game.actionLabel}
+          {isDone ? 'Muy bien' : 'Toca rapido'}
         </button>
       </div>
-      <p className="mt-4 text-sm text-[rgba(var(--color-accent),0.76)]">Mantén el dedo pulsado unos segundos para llenar toda la barra.</p>
+      <p className="mt-4 text-sm text-[rgba(var(--color-accent),0.76)]">Empujones dados: {tapCount}. Si te paras mucho, la fuerza vuelve a bajar.</p>
     </GameShell>
   )
 }
 
-function VideoChallengeOverlay({ game, onComplete }: { game: VideoGame; onComplete: () => void }) {
+function VideoChallengeOverlay({
+  game,
+  onComplete,
+  onRestart,
+  onClose,
+}: {
+  game: VideoGame
+  onComplete: () => void
+  onRestart: () => void
+  onClose: () => void
+}) {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') {
+        return
+      }
+
+      event.preventDefault()
+      onClose()
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   return (
-    <div className="animate-fade-in absolute inset-0 z-[58] flex items-center justify-center bg-[rgba(4,2,1,0.36)] p-4 backdrop-blur-[3px]">
-      {game.type === 'collect' ? <CollectGameOverlay game={game} onComplete={onComplete} /> : null}
-      {game.type === 'trail' ? <TrailGameOverlay game={game} onComplete={onComplete} /> : null}
-      {game.type === 'drag' ? <DragGameOverlay game={game} onComplete={onComplete} /> : null}
-      {game.type === 'hold' ? <HoldGameOverlay game={game} onComplete={onComplete} /> : null}
+    <div data-story-modal="true" className="animate-fade-in absolute inset-0 z-[58] flex items-center justify-center bg-[rgba(4,2,1,0.36)] p-4 backdrop-blur-[3px]">
+      {game.type === 'collect' ? <CollectGameOverlay game={game} onComplete={onComplete} onRestart={onRestart} onClose={onClose} /> : null}
+      {game.type === 'trail' ? <TrailGameOverlay game={game} onComplete={onComplete} onRestart={onRestart} onClose={onClose} /> : null}
+      {game.type === 'drag' ? <DragGameOverlay game={game} onComplete={onComplete} onRestart={onRestart} onClose={onClose} /> : null}
+      {game.type === 'hold' ? <HoldGameOverlay game={game} onComplete={onComplete} onRestart={onRestart} onClose={onClose} /> : null}
     </div>
   )
 }
 
-function EndedVideoOverlay({ title, onReplay }: { title: string; onReplay: () => void }) {
+function EndedVideoOverlay({
+  title,
+  onReplay,
+  onClose,
+}: {
+  title: string
+  onReplay: () => void
+  onClose: () => void
+}) {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') {
+        return
+      }
+
+      event.preventDefault()
+      onClose()
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   return (
-    <div className="animate-fade-in absolute inset-0 z-[62] flex items-center justify-center bg-[rgba(5,3,2,0.42)] p-4 backdrop-blur-[3px]">
-      <GameShell title="Escena completada" description={`Has terminado "${title}". Si quieres, puedes volver a verla desde el principio.`} badge="Pop-up">
-        <button type="button" onClick={onReplay} className="button-primary btn-glow inline-flex items-center justify-center rounded-[1.2rem] px-6 py-3 text-base font-bold hover:scale-[1.03]">
-          Ver otra vez
-        </button>
+    <div data-story-modal="true" className="animate-fade-in absolute inset-0 z-[62] flex items-center justify-center bg-[rgba(5,3,2,0.42)] p-4 backdrop-blur-[3px]">
+      <GameShell
+        title="Escena terminada"
+        description={`La parte animada de "${title}" ya termino. Puedes seguir el cuento o verla otra vez.`}
+        badge="Cuento listo"
+        helperText="Cuando quieras, cierra esta tarjeta y usa el boton de continuar para pasar a la siguiente escena."
+        onClose={onClose}
+        closeLabel="Seguir el cuento"
+      >
+        <div className="grid gap-3">
+          <button type="button" onClick={onReplay} className={GAME_SECONDARY_BUTTON_CLASS}>
+            Ver otra vez
+          </button>
+        </div>
       </GameShell>
     </div>
   )
@@ -990,6 +1417,25 @@ function InteractiveVideoLayer({
     playVideo()
   }, [playVideo, prefersReducedMotion])
 
+  const handleRestartChallenge = useCallback(() => {
+    const video = videoRef.current
+    if (video) {
+      video.pause()
+    }
+
+    setChallengeKey((current) => current + 1)
+    setVideoStage('challenge')
+  }, [])
+
+  const handleCloseChallenge = useCallback(() => {
+    setVideoStage('playing')
+    playVideo()
+  }, [playVideo])
+
+  const handleCloseEnded = useCallback(() => {
+    setVideoStage('playing')
+  }, [])
+
   return (
     <>
       <SceneLayer
@@ -1011,6 +1457,8 @@ function InteractiveVideoLayer({
         <VideoChallengeOverlay
           key={challengeKey}
           game={game}
+          onRestart={handleRestartChallenge}
+          onClose={handleCloseChallenge}
           onComplete={() => {
             setVideoStage('playing')
             playVideo()
@@ -1018,7 +1466,7 @@ function InteractiveVideoLayer({
         />
       ) : null}
 
-      {videoStage === 'ended' ? <EndedVideoOverlay title={scene.title} onReplay={handleReplay} /> : null}
+      {videoStage === 'ended' ? <EndedVideoOverlay title={scene.title} onReplay={handleReplay} onClose={handleCloseEnded} /> : null}
     </>
   )
 }
@@ -1054,7 +1502,7 @@ export function StoryScene({ scene }: { scene: Scene }) {
 
       const message =
         scene.media.kind === 'video' && scene.videoGame
-          ? 'Esta escena se detiene para jugar un momento. Completa el reto y la historia seguira sola.'
+          ? 'Esta escena se detiene para jugar un momento. Aqui puedes tocar, arrastrar o dibujar un camino antes de seguir con el cuento.'
           : 'Puedes arrastrar el cuadro de texto si tapa una parte importante de la ilustracion.'
 
       setGuideMessage(message)

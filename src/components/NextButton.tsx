@@ -21,6 +21,14 @@ function isInteractiveTarget(target: EventTarget | null) {
   return Boolean(target.closest('button, a, input, textarea, select, [contenteditable="true"]'))
 }
 
+function hasOpenStoryModal() {
+  if (typeof document === 'undefined') {
+    return false
+  }
+
+  return Boolean(document.querySelector('[data-story-modal="true"]'))
+}
+
 export function NextButton({
   nextSceneId,
   href,
@@ -63,6 +71,9 @@ export function NextButton({
         return
       }
       if (isInteractiveTarget(event.target)) {
+        return
+      }
+      if (hasOpenStoryModal()) {
         return
       }
 

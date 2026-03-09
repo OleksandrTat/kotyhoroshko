@@ -15,8 +15,8 @@ const PREVIEW_CARDS = [
   },
   {
     label: 'Duelo',
-    title: 'El encuentro con el dragon',
-    src: '/scenes/scene-22/______e3814a2548.jpeg',
+    title: 'El golpe decisivo',
+    src: '/scenes/scene-25/Reinterpretacin_moderna_y_coherente_de_un_cuento_t_b18fd58a45.jpeg',
     className: 'lg:absolute lg:right-4 lg:bottom-8 lg:w-60 lg:-rotate-4',
   },
 ]

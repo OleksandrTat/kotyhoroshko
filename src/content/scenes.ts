@@ -105,13 +105,6 @@ const layered = (
   altForeground,
 })
 
-const ambient = (alt: string): SceneMedia => ({
-  kind: 'ambient',
-  alt,
-})
-
-export const TOTAL_SCENES = 28
-
 export const SCENES: Scene[] = [
   {
     id: 1,
@@ -125,8 +118,8 @@ export const SCENES: Scene[] = [
     ),
     videoGame: {
       type: 'collect',
-      title: 'Reúne las luces del hogar',
-      description: 'Toca las tres lucecitas doradas para despertar la escena.',
+      title: 'Atrapa las luces del hogar',
+      description: 'Las luces del hogar bailan por la pantalla. Atrapalas para despertar la escena.',
       theme: 'firefly',
       targetLabel: 'Luz del hogar',
     },
@@ -159,8 +152,8 @@ export const SCENES: Scene[] = [
     ),
     videoGame: {
       type: 'drag',
-      title: 'Guía el arado',
-      description: 'Arrastra el arado hasta el final del surco para ayudar a los hermanos.',
+      title: 'Guia el arado',
+      description: 'Lleva el arado por las marcas doradas y termina el surco sin perderte.',
       tokenLabel: 'Arado',
       goalLabel: 'Final del surco',
     },
@@ -178,8 +171,8 @@ export const SCENES: Scene[] = [
     ),
     videoGame: {
       type: 'collect',
-      title: 'Atrapa las chispas',
-      description: 'Toca las chispas del dragón antes de que se escapen.',
+      title: 'Caza las chispas del dragon',
+      description: 'Las chispas del dragon saltan y huyen. Tocarlas a tiempo las apaga.',
       theme: 'spark',
       targetLabel: 'Chispa del dragón',
     },
@@ -210,7 +203,7 @@ export const SCENES: Scene[] = [
     videoGame: {
       type: 'trail',
       title: 'Sigue las huellas',
-      description: 'Toca las huellas en orden para encontrar el camino en el bosque.',
+      description: 'Desliza el dedo de huella en huella para no perder el rastro en el bosque.',
       stepLabel: 'Huella',
     },
   },
@@ -258,9 +251,10 @@ export const SCENES: Scene[] = [
       'Un día encontró un guisante y lo plantó en la tierra.',
     ],
     theme: 'hearth',
-    media: image(
+    media: video(
+      '/scenes/scene-10/Boy_holding_glowing_orb_7cbe406749.mp4',
+      'En casa, el hijo menor descubre el guisante magico entre sus manos',
       '/scenes/scene-10/Reinterpretacin_moderna_y_coherente_de_un_cuento_t_243f20699d.jpeg',
-      'En casa, el hijo menor encuentra un guisante y lo planta',
     ),
   },
   {
@@ -317,7 +311,7 @@ export const SCENES: Scene[] = [
     videoGame: {
       type: 'hold',
       title: 'Ayuda a levantar la roca',
-      description: 'Mantén pulsado para llenar la fuerza de Kotyhoroshko.',
+      description: 'Da empujones rapidos para llenar la fuerza de Kotyhoroshko y levantar la roca.',
       actionLabel: 'Levantar',
     },
   },
@@ -358,16 +352,6 @@ export const SCENES: Scene[] = [
   },
   {
     id: 18,
-    title: 'Demasiado frágil',
-    text: [
-      'El padre despertó a su hijo. Kotyhoroshko se levantó de un salto y puso el puño. La maza golpeó contra él y se partió en dos.',
-      '"No. Con una maza así no iré contra el dragón."',
-    ],
-    theme: 'forge',
-    media: ambient('La prueba falla y la primera maza se rompe'),
-  },
-  {
-    id: 19,
     title: 'Forjar de nuevo',
     text: [
       'Entonces volvió a ponerse en camino hacia el herrero.',
@@ -377,22 +361,22 @@ export const SCENES: Scene[] = [
     theme: 'forge',
     panelAlign: 'right',
     media: image(
-      '/scenes/scene-19/Reinterpretacin_moderna_y_coherente_de_un_cuento_t_5a6c5004eb.jpeg',
+      '/scenes/scene-18/Reinterpretacin_moderna_y_coherente_de_un_cuento_t_5a6c5004eb.jpeg',
       'Kotyhoroshko regresa al herrero para reforjar la maza',
     ),
   },
   {
-    id: 20,
+    id: 19,
     title: 'Lista para el combate',
     text: [
       'Kotyhoroshko lanzó otra vez la maza y volvió a acostarse. Doce días después, la maza regresó y chocó contra su puño; solo se dobló un poco.',
       '"Ahora sí. Con esta maza iré contra el dragón", dijo Kotyhoroshko.',
     ],
     theme: 'forge',
-    media: image('/scenes/scene-20/___________49ae497244.jpeg', 'La segunda maza resiste la prueba del puño de Kotyhoroshko'),
+    media: image('/scenes/scene-19/___________49ae497244.jpeg', 'La segunda maza resiste la prueba del puño de Kotyhoroshko'),
   },
   {
-    id: 21,
+    id: 20,
     title: 'El viaje al patio del dragón',
     text: [
       'Kotyhoroshko se despidió de su padre y de su madre y siguió el mismo surco por el que habían ido su hermana y sus hermanos sin regresar.',
@@ -401,12 +385,12 @@ export const SCENES: Scene[] = [
     theme: 'trail',
     panelAlign: 'right',
     media: image(
-      '/scenes/scene-21/Reinterpretacin_moderna_y_coherente_de_un_cuento_t_5cb26906a6.jpeg',
+      '/scenes/scene-20/Reinterpretacin_moderna_y_coherente_de_un_cuento_t_5cb26906a6.jpeg',
       'Kotyhoroshko sigue la antigua marca del arado hasta la guarida del dragón',
     ),
   },
   {
-    id: 22,
+    id: 21,
     title: 'El reto final',
     text: [
       '"¿Qué quieres?", siseó el dragón. "No soporto el olor humano. ¿Has venido a luchar o a hacer las paces?"',
@@ -414,10 +398,14 @@ export const SCENES: Scene[] = [
       '"Aquí encontrarás tu muerte", silbó el dragón.',
     ],
     theme: 'dragon',
-    media: image('/scenes/scene-22/______e3814a2548.jpeg', 'Kotyhoroshko se enfrenta al dragón en su propio patio'),
+    media: video(
+      '/scenes/scene-21/Boy_walking_toward_castle_469fe2bb13.mp4',
+      'Kotyhoroshko avanza hacia la guarida del dragon para el reto final',
+      '/scenes/scene-21/______e3814a2548.jpeg',
+    ),
   },
   {
-    id: 23,
+    id: 22,
     title: 'El silbido del monstruo',
     text: [
       'Llegaron junto al roble de hierro. El dragón silbó, las hojas cayeron del árbol y el aire entero empezó a resonar.',
@@ -425,12 +413,12 @@ export const SCENES: Scene[] = [
     theme: 'duel',
     panelAlign: 'right',
     media: image(
-      '/scenes/scene-23/Reinterpretacin_moderna_y_coherente_de_un_cuento_t_d0763a94e7.jpeg',
+      '/scenes/scene-22/Reinterpretacin_moderna_y_coherente_de_un_cuento_t_d0763a94e7.jpeg',
       'El dragón silba bajo el roble de hierro y hace temblar el patio',
     ),
   },
   {
-    id: 24,
+    id: 23,
     title: 'El engaño astuto',
     text: [
       'Entonces Kotyhoroshko dijo:',
@@ -438,10 +426,10 @@ export const SCENES: Scene[] = [
       'El dragón cerró los ojos. Y Kotyhoroshko le descargó la maza en la frente.',
     ],
     theme: 'duel',
-    media: image('/scenes/scene-24/__________________60e9413e5d.jpeg', 'Kotyhoroshko engaña al dragón y lo golpea con la maza'),
+    media: image('/scenes/scene-23/__________________60e9413e5d.jpeg', 'Kotyhoroshko engaña al dragón y lo golpea con la maza'),
   },
   {
-    id: 25,
+    id: 24,
     title: 'Sin tregua',
     text: [
       '"¿Ves qué bien silbo?", preguntó Kotyhoroshko.',
@@ -450,40 +438,24 @@ export const SCENES: Scene[] = [
     ],
     theme: 'duel',
     panelAlign: 'right',
-    media: image('/scenes/scene-25/_____________9aaf4cce3c.jpeg', 'El dragón intenta pactar, pero Kotyhoroshko rechaza la tregua'),
+    media: image('/scenes/scene-24/_____________9aaf4cce3c.jpeg', 'El dragón intenta pactar, pero Kotyhoroshko rechaza la tregua'),
   },
   {
-    id: 26,
+    id: 25,
     title: 'El golpe decisivo',
     text: [
       'Entonces comenzaron a pelear. Nuestro héroe atrapó al dragón y lo lanzó con tal fuerza que fue a estrellarse contra el árbol.',
       'El tronco se partió en dos y la cola del dragón quedó atrapada. Pero el tronco era de hierro: no podía liberarse.',
     ],
     theme: 'duel',
-    media: ambient('El combate alcanza su punto más feroz bajo el roble de hierro'),
-  },
-  {
-    id: 27,
-    title: 'Los cautivos libres',
-    text: [
-      'Kotyhoroshko dejó al dragón atrapado y fue a liberar a sus hermanos de la prisión. Dobló los barrotes, sacó a los cautivos y los llevó afuera.',
-      'Ellos ni siquiera reconocieron a su hermano menor, porque había crecido muy deprisa.',
-    ],
-    theme: 'dungeon',
-    panelAlign: 'right',
-    media: ambient('Kotyhoroshko abre la prisión y libera a los cautivos'),
-  },
-  {
-    id: 28,
-    title: 'La huida del dragón',
-    text: [
-      'Pero, mientras tanto, el dragón arrancó el roble de cuajo, agarró a la hermana de Kotyhoroshko y echó a volar.',
-      'El roble, tan pesado, iba arrastrándose por el suelo detrás de él y dejaba una larga huella.',
-    ],
-    theme: 'escape',
-    media: ambient('El dragón huye por el cielo llevándose a la hermana de Kotyhoroshko'),
+    media: image(
+      '/scenes/scene-25/Reinterpretacin_moderna_y_coherente_de_un_cuento_t_b18fd58a45.jpeg',
+      'Kotyhoroshko asesta el golpe decisivo al dragón junto al roble de hierro',
+    ),
   },
 ]
+
+export const TOTAL_SCENES = SCENES.length
 
 export function getSceneById(id: number) {
   return SCENES.find((scene) => scene.id === id)
