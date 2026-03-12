@@ -10,6 +10,7 @@ import WeatherEffect from '@/components/WeatherEffect'
 import { ScrollHint } from '@/components/ScrollHint'
 import { NarratorCharacter } from '@/components/NarratorCharacter'
 import { DialogueBubbleComponent } from '@/components/DialogueBubble'
+import { AtmosphereGSAP } from '@/components/AtmosphereGSAP'
 import { useTextReveal } from '@/hooks/useTextReveal'
 import { TOTAL_SCENES, type Scene, type SceneInteraction, type SceneTheme } from '@/content/scenes'
 import { createStoryAudioEngine, type StoryAudioEngine } from '@/lib/storyAudioEngine'
@@ -56,15 +57,6 @@ const HOTSPOT_PLACEMENT: Array<{ top: string; left: string }> = [
   { top: '40%', left: '78%' },
   { top: '62%', left: '20%' },
 ]
-
-const ATMOSPHERE_PARTICLES: Record<Scene['atmosphere'], number> = {
-  embers: 14,
-  mist: 8,
-  wind: 10,
-  rain: 14,
-  magic: 12,
-  starlight: 12,
-}
 
 const STORY_CHAPTERS = [
   { start: 1, label: 'Hogar', mood: 'La calma antes del cuento' },
@@ -315,44 +307,6 @@ function SceneVisual({
 }
 
 
-function StoryAtmosphere({ scene }: { scene: Scene }) {
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const update = () => setIsMobile(window.innerWidth < 768)
-    update()
-    window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
-  }, [])
-
-  const particleCount = isMobile ? 0 : ATMOSPHERE_PARTICLES[scene.atmosphere]
-  const particles = useMemo(() => Array.from({ length: particleCount }, (_, index) => index), [particleCount])
-
-  if (particleCount === 0) {
-    return null
-  }
-
-  return (
-    <div className="pointer-events-none absolute inset-0 z-[8] overflow-hidden">
-      {particles.map((particle) => (
-        <span
-          key={`${scene.id}-${particle}`}
-          className={`story-atmosphere story-atmosphere-${scene.atmosphere} absolute`}
-          style={
-            {
-              '--delay': `${(particle % 6) * 0.45}s`,
-              '--duration': `${6 + (particle % 5) * 1.35}s`,
-              '--left': `${6 + ((particle * 11) % 86)}%`,
-              '--top': `${6 + ((particle * 17) % 82)}%`,
-              '--size': `${scene.atmosphere === 'mist' ? 140 + (particle % 4) * 36 : 8 + (particle % 5) * 4}px`,
-            } as CSSProperties
-          }
-        />
-      ))}
-    </div>
-  )
-}
-
 function StorySection({
   scene,
   index,
@@ -429,7 +383,7 @@ function StorySection({
             foreground: foregroundRef,
           }}
         />
-        <StoryAtmosphere scene={scene} />
+        <AtmosphereGSAP type={scene.atmosphere} />
         <WeatherEffect type={scene.weather?.type ?? 'none'} intensity={scene.weather?.intensity ?? 'medium'} />
         <div className={`absolute inset-0 bg-gradient-to-br ${THEME_SURFACE[scene.theme]}`} />
         <div className={`absolute inset-0 ${THEME_GLOW[scene.theme]}`} />
