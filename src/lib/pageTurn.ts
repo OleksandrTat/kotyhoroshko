@@ -1,54 +1,45 @@
-type ViewTransition = {
-  finished: Promise<void>
+export const PAGE_TURN_DURATION = 350
+
+export async function transitionForward(): Promise<void> {
+  return runTransition()
 }
 
-type ViewTransitionDocument = Document & {
-  startViewTransition?: (updateCallback: () => void | Promise<void>) => ViewTransition
+export async function transitionBackward(): Promise<void> {
+  return runTransition()
 }
 
-type PageTurnDirection = 'forward' | 'backward'
-
-type PageTurnOptions = {
-  direction?: PageTurnDirection
-  durationMs?: number
-}
-
-export function navigateWithPageTurn(navigate: () => void, options: PageTurnOptions = {}) {
-  if (typeof window === 'undefined') {
-    navigate()
+async function runTransition(): Promise<void> {
+  if (typeof document === 'undefined') {
     return
   }
 
-  const direction = options.direction ?? 'forward'
-  const root = document.documentElement
-  root.dataset.pageTurn = direction
+  const overlay = document.createElement('div')
+  overlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity ${PAGE_TURN_DURATION * 0.4}ms ease;
+  `
+  document.body.appendChild(overlay)
 
-  root.style.setProperty('--page-turn-duration', `${options.durationMs ?? 980}ms`)
+  await tick()
+  overlay.style.opacity = '0.35'
 
-  const cleanup = () => {
-    delete root.dataset.pageTurn
-    root.style.removeProperty('--page-turn-duration')
-  }
+  await wait(PAGE_TURN_DURATION * 0.4)
+  overlay.style.transition = `opacity ${PAGE_TURN_DURATION * 0.6}ms ease`
+  overlay.style.opacity = '0'
 
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const viewDoc = document as ViewTransitionDocument
+  await wait(PAGE_TURN_DURATION * 0.6)
+  overlay.remove()
+}
 
-  if (!viewDoc.startViewTransition || prefersReducedMotion) {
-    navigate()
-    cleanup()
-    return
-  }
+function wait(ms: number) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms))
+}
 
-  try {
-    const transition = viewDoc.startViewTransition(() => {
-      navigate()
-    })
-
-    void transition.finished.finally(() => {
-      cleanup()
-    })
-  } catch {
-    navigate()
-    cleanup()
-  }
+function tick() {
+  return new Promise((resolve) => window.requestAnimationFrame(resolve))
 }

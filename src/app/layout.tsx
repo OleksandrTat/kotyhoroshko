@@ -1,29 +1,67 @@
-import type { Metadata } from 'next'
-import { Marck_Script, Philosopher } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
+import { IM_Fell_English, Marck_Script } from 'next/font/google'
+import { getSiteUrl } from '@/lib/site'
 import './globals.css'
+
+const siteUrl = getSiteUrl()
 
 const displayFont = Marck_Script({
   weight: '400',
-  subsets: ['latin', 'cyrillic'],
-  variable: '--font-display',
+  subsets: ['latin'],
+  variable: '--font-display-var',
+  display: 'swap',
 })
 
-const bodyFont = Philosopher({
-  weight: ['400', '700'],
-  subsets: ['latin', 'cyrillic'],
-  variable: '--font-body',
+const bodyFont = IM_Fell_English({
+  weight: ['400'],
+  style: ['normal', 'italic'],
+  subsets: ['latin'],
+  variable: '--font-body-var',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
-  title: 'Kotyhoroshko | cuento interactivo',
-  description: 'Sumérgete en una versión interactiva del cuento popular ucraniano de Kotyhoroshko.',
-  keywords: ['cuento ucraniano', 'Kotyhoroshko', 'historia interactiva', 'folclore', 'cuento popular'],
+  metadataBase: new URL(siteUrl),
+  title: 'Kotyhoroshko | cuento interactivo infantil',
+  description: 'Cuento interactivo infantil de Kotyhoroshko con scroll suave, narrador, animaciones, tacto y audio.',
+  keywords: ['cuento infantil', 'Kotyhoroshko', 'cuento interactivo', 'Next.js', 'GSAP', 'Lenis', 'cuento clasico'],
   authors: [{ name: 'Kotyhoroshko Tale' }],
-  openGraph: {
-    title: 'Kotyhoroshko | cuento interactivo',
-    description: 'Sumérgete en una versión interactiva del cuento popular ucraniano de Kotyhoroshko.',
-    type: 'website',
+  alternates: {
+    canonical: '/',
   },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    title: 'Kotyhoroshko | cuento interactivo infantil',
+    description: 'Una reinterpretacion infantil de Kotyhoroshko con scroll por escenas, narrador visible y juego tactil.',
+    type: 'website',
+    url: '/',
+    siteName: 'Kotyhoroshko',
+    locale: 'es_ES',
+    images: [
+      {
+        url: '/scenes/scene-25/Reinterpretacin_moderna_y_coherente_de_un_cuento_t_b18fd58a45.jpeg',
+        width: 1200,
+        height: 630,
+        alt: 'Kotyhoroshko lucha contra el dragon bajo el roble de hierro',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Kotyhoroshko | cuento interactivo infantil',
+    description: 'Scroll suave, narrador, sonido y escenas tactiles para publico infantil.',
+    images: ['/scenes/scene-25/Reinterpretacin_moderna_y_coherente_de_un_cuento_t_b18fd58a45.jpeg'],
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0b0a08',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 }
 
 export default function RootLayout({
@@ -33,10 +71,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${displayFont.variable} ${bodyFont.variable}`}>
-      <head>
-        <meta name="theme-color" content="#000000" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-      </head>
       <body className="bg-black text-white antialiased">{children}</body>
     </html>
   )

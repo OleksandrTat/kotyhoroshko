@@ -1,7 +1,5 @@
-import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
-import { StoryScene } from '@/components/StoryScene'
-import { TOTAL_SCENES, getSceneById } from '@/content/scenes'
+import { notFound, redirect } from 'next/navigation'
+import { TOTAL_SCENES } from '@/content/scenes'
 
 type PageProps = {
   params: Promise<{
@@ -25,29 +23,6 @@ export async function generateStaticParams() {
   }))
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params
-  const sceneId = parseSceneId(id)
-
-  if (!sceneId) {
-    return {
-      title: 'Escena no encontrada | Kotyhoroshko',
-    }
-  }
-
-  const scene = getSceneById(sceneId)
-  if (!scene) {
-    return {
-      title: 'Escena no encontrada | Kotyhoroshko',
-    }
-  }
-
-  return {
-    title: `${scene.title} | Kotyhoroshko`,
-    description: scene.text[0],
-  }
-}
-
 export default async function ScenePage({ params }: PageProps) {
   const { id } = await params
   const sceneId = parseSceneId(id)
@@ -56,10 +31,5 @@ export default async function ScenePage({ params }: PageProps) {
     notFound()
   }
 
-  const scene = getSceneById(sceneId)
-  if (!scene) {
-    notFound()
-  }
-
-  return <StoryScene scene={scene} />
+  redirect(`/#scene-${sceneId}`)
 }

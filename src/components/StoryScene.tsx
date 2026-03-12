@@ -1,10 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject } from 'react'
 import { NextButton } from '@/components/NextButton'
 import { SceneContainer } from '@/components/SceneContainer'
 import { SceneLayer } from '@/components/SceneLayer'
+import WeatherEffect from '@/components/WeatherEffect'
 import { TOTAL_SCENES, type Scene, type SceneTheme, type VideoGame } from '@/content/scenes'
+import { cancelBrowserNarration, speakWithBrowserVoice } from '@/lib/storyNarration'
 
 type VideoSceneMedia = Extract<Scene['media'], { kind: 'video' }>
 type VideoStage = 'intro' | 'challenge' | 'playing' | 'ended'
@@ -154,6 +156,56 @@ function getNormalizedPoint(rect: DOMRect, clientX: number, clientY: number): Ga
 
 function toViewBoxPoint(point: GamePoint) {
   return `${point.x * 100},${point.y * 100}`
+}
+
+function useFocusTrap(active: boolean, containerRef: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const container = containerRef.current
+    if (!active || !container) {
+      return
+    }
+
+    const focusableSelectors =
+      'a[href], button, textarea, input, select, [tabindex]:not([tabindex="-1"])'
+    const getFocusable = () => Array.from(container.querySelectorAll<HTMLElement>(focusableSelectors))
+
+    const focusables = getFocusable()
+    const first = focusables[0]
+    const last = focusables[focusables.length - 1]
+
+    if (first) {
+      first.focus()
+    } else {
+      container.focus()
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') {
+        return
+      }
+
+      const focusable = getFocusable()
+      if (focusable.length === 0) {
+        event.preventDefault()
+        return
+      }
+
+      const activeElement = document.activeElement
+      const firstElement = focusable[0]
+      const lastElement = focusable[focusable.length - 1]
+
+      if (event.shiftKey && activeElement === firstElement) {
+        event.preventDefault()
+        lastElement.focus()
+      } else if (!event.shiftKey && activeElement === lastElement) {
+        event.preventDefault()
+        firstElement.focus()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [active, containerRef])
 }
 
 const THEME_META: Record<
@@ -1138,6 +1190,8 @@ function VideoChallengeOverlay({
   onRestart: () => void
   onClose: () => void
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') {
@@ -1152,8 +1206,17 @@ function VideoChallengeOverlay({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
+  useFocusTrap(true, dialogRef)
+
   return (
-    <div data-story-modal="true" className="animate-fade-in absolute inset-0 z-[58] flex items-center justify-center bg-[rgba(4,2,1,0.36)] p-4 backdrop-blur-[3px]">
+    <div
+      ref={dialogRef}
+      data-story-modal="true"
+      role="dialog"
+      aria-modal="true"
+      tabIndex={-1}
+      className="animate-fade-in absolute inset-0 z-[58] flex items-center justify-center bg-[rgba(4,2,1,0.36)] p-4 backdrop-blur-[3px]"
+    >
       {game.type === 'collect' ? <CollectGameOverlay game={game} onComplete={onComplete} onRestart={onRestart} onClose={onClose} /> : null}
       {game.type === 'trail' ? <TrailGameOverlay game={game} onComplete={onComplete} onRestart={onRestart} onClose={onClose} /> : null}
       {game.type === 'drag' ? <DragGameOverlay game={game} onComplete={onComplete} onRestart={onRestart} onClose={onClose} /> : null}
@@ -1161,6 +1224,8 @@ function VideoChallengeOverlay({
     </div>
   )
 }
+
+const LazyVideoChallengeOverlay = lazy(async () => ({ default: VideoChallengeOverlay }))
 
 function EndedVideoOverlay({
   title,
@@ -1171,6 +1236,8 @@ function EndedVideoOverlay({
   onReplay: () => void
   onClose: () => void
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') {
@@ -1185,8 +1252,17 @@ function EndedVideoOverlay({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
+  useFocusTrap(true, dialogRef)
+
   return (
-    <div data-story-modal="true" className="animate-fade-in absolute inset-0 z-[62] flex items-center justify-center bg-[rgba(5,3,2,0.42)] p-4 backdrop-blur-[3px]">
+    <div
+      ref={dialogRef}
+      data-story-modal="true"
+      role="dialog"
+      aria-modal="true"
+      tabIndex={-1}
+      className="animate-fade-in absolute inset-0 z-[62] flex items-center justify-center bg-[rgba(5,3,2,0.42)] p-4 backdrop-blur-[3px]"
+    >
       <GameShell
         title="Escena terminada"
         description={`La parte animada de "${title}" ya termino. Puedes seguir el cuento o verla otra vez.`}
@@ -1217,6 +1293,8 @@ function DraggableStoryPanel({
   const dragRef = useRef<{ pointerId: number; startX: number; startY: number; originX: number; originY: number } | null>(null)
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [isNarrating, setIsNarrating] = useState(false)
 
   const clampPosition = useCallback((x: number, y: number) => {
     const panel = panelRef.current
@@ -1242,6 +1320,12 @@ function DraggableStoryPanel({
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [clampPosition, position])
+
+  useEffect(() => {
+    setExpanded(false)
+    setIsNarrating(false)
+    cancelBrowserNarration()
+  }, [scene.id])
 
   const handlePointerDown = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
     const panel = panelRef.current
@@ -1286,6 +1370,22 @@ function DraggableStoryPanel({
     }
   }, [])
 
+  const handleNarrate = useCallback(() => {
+    if (isNarrating) {
+      cancelBrowserNarration()
+      setIsNarrating(false)
+      return
+    }
+
+    cancelBrowserNarration()
+    speakWithBrowserVoice({
+      text: scene.text.join(' '),
+      theme: scene.theme,
+      onStart: () => setIsNarrating(true),
+      onEnd: () => setIsNarrating(false),
+    })
+  }, [isNarrating, scene])
+
   const alignedClass =
     scene.panelAlign === 'right'
       ? 'md:left-auto md:right-[calc(2rem+env(safe-area-inset-right))]'
@@ -1300,8 +1400,23 @@ function DraggableStoryPanel({
       style={position ? { left: `${position.x}px`, top: `${position.y}px`, right: 'auto', bottom: 'auto', width: 'min(92vw, 32rem)' } : undefined}
     >
       <div className={`story-panel depth-shadow relative rounded-[2rem] border border-[rgba(var(--color-accent),0.28)] bg-[linear-gradient(145deg,rgba(26,14,10,0.9),rgba(11,6,4,0.92))] p-5 sm:p-6 md:p-7 ${isDragging ? 'shadow-[0_34px_90px_rgba(0,0,0,0.62)]' : ''}`}>
+        <span className="pointer-events-none absolute inset-y-4 left-0 w-[3px] rounded-full bg-[linear-gradient(180deg,rgba(255,236,204,0.9),rgba(214,134,76,0.6))]" />
         <div className="pointer-events-none absolute inset-0 rounded-[inherit] bg-[linear-gradient(145deg,rgba(var(--color-accent),0.08),transparent_45%,rgba(var(--color-primary),0.08))]" />
-        <div className="relative flex items-start justify-between gap-4">
+
+        <button
+          type="button"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerEnd}
+          onPointerCancel={handlePointerEnd}
+          aria-label="Arrastrar el cuadro de texto"
+          className={`absolute left-1/2 top-3 -translate-x-1/2 rounded-full border border-[rgba(var(--color-accent),0.22)] bg-[rgba(var(--color-secondary),0.2)] px-4 py-1 text-[10px] uppercase tracking-[0.24em] text-[rgba(var(--color-accent),0.74)] ${isDragging ? 'cursor-grabbing' : 'cursor-grab hover:bg-[rgba(var(--color-secondary),0.3)]'}`}
+          style={{ touchAction: 'none' }}
+        >
+          ⋮⋮⋮
+        </button>
+
+        <div className="relative flex items-start justify-between gap-4 pt-6">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-[rgba(var(--color-accent),0.68)]">Escena {scene.id} de {TOTAL_SCENES}</p>
             <p className="mt-2 text-[11px] uppercase tracking-[0.26em] text-[rgba(var(--color-accent),0.52)]">{meta.label}</p>
@@ -1311,15 +1426,12 @@ function DraggableStoryPanel({
           </div>
           <button
             type="button"
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerEnd}
-            onPointerCancel={handlePointerEnd}
-            aria-label="Arrastrar el cuadro de texto"
-            className={`inline-flex shrink-0 items-center gap-2 rounded-full border border-[rgba(var(--color-accent),0.22)] bg-[rgba(var(--color-secondary),0.2)] px-3 py-1.5 text-[10px] uppercase tracking-[0.24em] text-[rgba(var(--color-accent),0.74)] ${isDragging ? 'cursor-grabbing' : 'cursor-grab hover:bg-[rgba(var(--color-secondary),0.3)]'}`}
-            style={{ touchAction: 'none' }}
+            onClick={() => setExpanded((value) => !value)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(var(--color-accent),0.22)] bg-[rgba(255,255,255,0.04)] text-xs text-[rgba(var(--color-accent),0.8)] hover:bg-[rgba(255,255,255,0.1)]"
+            aria-pressed={expanded}
+            aria-label={expanded ? 'Contraer panel de historia' : 'Expandir panel de historia'}
           >
-            Arrastra
+            ↕
           </button>
         </div>
 
@@ -1327,12 +1439,34 @@ function DraggableStoryPanel({
           {meta.hint}
         </div>
 
-        <div className="story-scroll-mask relative mt-5 max-h-[min(42svh,25rem)] space-y-4 overflow-y-auto pr-2">
+        <div className={`relative mt-5 space-y-4 pr-2 ${expanded ? '' : 'story-scroll-mask max-h-[min(42svh,25rem)] overflow-y-auto'}`}>
           {scene.text.map((paragraph) => (
             <p key={paragraph} className="story-text text-left font-medium text-[rgba(var(--color-accent),0.95)]">
               {paragraph}
             </p>
           ))}
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={handleNarrate}
+            aria-pressed={isNarrating}
+            className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs uppercase tracking-[0.22em] transition-colors duration-300 ${
+              isNarrating
+                ? 'border-[rgba(205,255,170,0.35)] bg-[rgba(50,98,52,0.35)] text-[rgba(231,255,230,0.92)]'
+                : 'border-[rgba(var(--color-accent),0.22)] bg-[rgba(255,255,255,0.04)] text-[rgba(var(--color-accent),0.86)] hover:bg-[rgba(255,255,255,0.12)]'
+            }`}
+          >
+            {isNarrating ? 'Detener narracion' : 'Narrar esto 🔊'}
+          </button>
+          <button
+            type="button"
+            onClick={() => setExpanded((value) => !value)}
+            className="inline-flex items-center gap-2 rounded-full border border-[rgba(var(--color-accent),0.2)] bg-[rgba(255,255,255,0.04)] px-3 py-2 text-xs uppercase tracking-[0.22em] text-[rgba(var(--color-accent),0.8)] hover:bg-[rgba(255,255,255,0.12)]"
+          >
+            {expanded ? 'Contraer' : 'Expandir'}
+          </button>
         </div>
       </div>
     </div>
@@ -1454,16 +1588,24 @@ function InteractiveVideoLayer({
       />
 
       {game && videoStage === 'challenge' ? (
-        <VideoChallengeOverlay
-          key={challengeKey}
-          game={game}
-          onRestart={handleRestartChallenge}
-          onClose={handleCloseChallenge}
-          onComplete={() => {
-            setVideoStage('playing')
-            playVideo()
-          }}
-        />
+        <Suspense
+          fallback={
+            <div className="absolute inset-0 z-[58] flex items-center justify-center bg-[rgba(5,3,2,0.35)] text-sm text-[rgba(var(--color-accent),0.82)]">
+              Preparando el reto…
+            </div>
+          }
+        >
+          <LazyVideoChallengeOverlay
+            key={challengeKey}
+            game={game}
+            onRestart={handleRestartChallenge}
+            onClose={handleCloseChallenge}
+            onComplete={() => {
+              setVideoStage('playing')
+              playVideo()
+            }}
+          />
+        </Suspense>
       ) : null}
 
       {videoStage === 'ended' ? <EndedVideoOverlay title={scene.title} onReplay={handleReplay} onClose={handleCloseEnded} /> : null}
@@ -1481,6 +1623,10 @@ export function StoryScene({ scene }: { scene: Scene }) {
     const timer = window.setTimeout(() => setTextVisible(true), 180)
     return () => window.clearTimeout(timer)
   }, [scene.id])
+
+  useEffect(() => {
+    return () => cancelBrowserNarration()
+  }, [])
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -1650,6 +1796,8 @@ export function StoryScene({ scene }: { scene: Scene }) {
         ) : null}
 
         {scene.media.kind === 'video' ? <InteractiveVideoLayer scene={scene} prefersReducedMotion={prefersReducedMotion} /> : null}
+
+        <WeatherEffect type={scene.weather?.type ?? 'none'} intensity={scene.weather?.intensity ?? 'medium'} />
 
         <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-[rgba(8,7,7,0.96)] via-[rgba(20,14,10,0.38)] to-[rgba(12,10,9,0.08)]" />
         <div className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_22%_18%,rgba(var(--color-accent),0.12),transparent_38%)]" />

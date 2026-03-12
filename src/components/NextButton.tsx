@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
-import { navigateWithPageTurn } from '@/lib/pageTurn'
+import { transitionBackward, transitionForward } from '@/lib/pageTurn'
 
 type Props = {
   nextSceneId?: number
@@ -57,9 +57,9 @@ export function NextButton({
     }
 
     setIsNavigating(true)
-    navigateWithPageTurn(() => {
-      router.push(targetPath)
-    }, { direction })
+    const runTransition = direction === 'backward' ? transitionBackward : transitionForward
+    void runTransition()
+    router.push(targetPath)
   }, [direction, isNavigating, router, targetPath])
 
   useEffect(() => {

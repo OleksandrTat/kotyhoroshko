@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SceneTransition } from '@/components/SceneTransition'
-import { navigateWithPageTurn } from '@/lib/pageTurn'
+import { transitionBackward } from '@/lib/pageTurn'
 
 type Props = {
   children: React.ReactNode
@@ -79,9 +79,8 @@ export function SceneContainer({ children }: Props) {
   }, [])
 
   const handleGoHome = useCallback(() => {
-    navigateWithPageTurn(() => {
-      router.push('/')
-    }, { direction: 'backward' })
+    void transitionBackward()
+    router.push('/')
   }, [router])
 
   return (

@@ -1,4 +1,6 @@
-import type { ReactEventHandler, RefObject } from 'react'
+'use client'
+
+import { useEffect, useState, type ReactEventHandler, type RefObject } from 'react'
 import Image from 'next/image'
 
 type Props = {
@@ -36,6 +38,11 @@ export function SceneLayer({
 }: Props) {
   const normalizedSrc = encodeURI(src)
   const normalizedPoster = poster ? encodeURI(poster) : undefined
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    setIsLoaded(false)
+  }, [normalizedSrc])
 
   if (media === 'video') {
     return (
@@ -46,6 +53,8 @@ export function SceneLayer({
         muted={muted}
         loop={loop}
         playsInline={playsInline}
+        // @ts-expect-error - iOS Safari requires the webkit-playsinline attribute.
+        webkit-playsinline={playsInline ? 'true' : undefined}
         preload={priority ? 'auto' : 'metadata'}
         poster={normalizedPoster}
         aria-label={alt}
@@ -60,13 +69,19 @@ export function SceneLayer({
 
   return (
     <div className={`absolute inset-0 ${className}`}>
+      <div
+        className={`scene-image-shimmer absolute inset-0 transition-opacity duration-700 ${isLoaded ? 'opacity-0' : 'opacity-100'}`}
+        aria-hidden="true"
+      />
       <Image
         src={normalizedSrc}
         alt={alt}
         fill
         sizes="100vw"
-        className="select-none object-cover"
+        className={`select-none object-cover scene-image-boost transition-opacity duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
         priority={priority}
+        loading={priority ? 'eager' : 'lazy'}
+        onLoadingComplete={() => setIsLoaded(true)}
         draggable={false}
       />
     </div>
