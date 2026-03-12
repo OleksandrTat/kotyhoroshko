@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef } from 'react'
+import { gsap } from 'gsap'
 import type { SceneHotspot } from '@/content/scenes'
 
 export default function SceneHotspots({
@@ -8,45 +9,86 @@ export default function SceneHotspots({
   onActivate,
 }: {
   hotspots: SceneHotspot[]
-  onActivate?: (index: number, element: HTMLButtonElement) => void
+  onActivate?: (index: number, el: HTMLButtonElement) => void
 }) {
-  const [active, setActive] = useState<number | null>(null)
+  const refsMap = useRef<Map<number, HTMLButtonElement>>(new Map())
+
+  const handleTap = (index: number) => {
+    const el = refsMap.current.get(index)
+    if (!el) return
+
+    gsap.timeline()
+      .to(el, { scale: 1.6, duration: 0.15, ease: 'power2.out' })
+      .to(el, { scale: 1, duration: 0.4, ease: 'elastic.out(1.5, 0.4)' })
+
+    spawnSparkles(el)
+    onActivate?.(index, el)
+
+    if ('vibrate' in navigator) navigator.vibrate(30)
+  }
 
   return (
     <>
-      {hotspots.map((hotspot, index) => (
+      {hotspots.map((spot, i) => (
         <button
-          key={`${hotspot.icon}-${hotspot.x}-${hotspot.y}-${index}`}
-          onClick={(event) => {
-            setActive(index)
-            onActivate?.(index, event.currentTarget)
-            window.setTimeout(() => setActive(null), 800)
-          }}
+          key={i}
+          ref={(el) => { if (el) refsMap.current.set(i, el) }}
+          type="button"
+          onClick={() => handleTap(i)}
+          aria-label={spot.tooltip ?? 'Òîðêíèñü ìåíå!'}
+          data-cursor="hotspot"
           style={{
             position: 'absolute',
-            left: `${hotspot.x}%`,
-            top: `${hotspot.y}%`,
+            left: `${spot.x}%`,
+            top: `${spot.y}%`,
             transform: 'translate(-50%, -50%)',
+            fontSize: '2.8rem',
+            lineHeight: 1,
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            fontSize: active === index ? '2.5rem' : '1.8rem',
-            transition: 'font-size 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            filter:
-              active === index
-                ? 'drop-shadow(0 0 12px rgba(255,220,100,0.9))'
-                : 'drop-shadow(0 0 4px rgba(255,200,80,0.4))',
+            padding: '12px',
+            minWidth: '56px',
+            minHeight: '56px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            animation: 'hotspotPulse 2.5s ease-in-out infinite',
+            filter: 'drop-shadow(0 0 8px rgba(255,200,80,0.6))',
             zIndex: 20,
-            animation: active === index ? 'none' : 'hotspotPulse 3s ease-in-out infinite',
           }}
-          aria-label={hotspot.tooltip ?? 'InteracciÃ³n'}
-          title={hotspot.tooltip}
-          data-interactive="true"
-          type="button"
         >
-          {hotspot.icon}
+          {spot.icon}
         </button>
       ))}
     </>
   )
+}
+
+function spawnSparkles(origin: HTMLElement) {
+  const rect = origin.getBoundingClientRect()
+  const cx = rect.left + rect.width / 2
+  const cy = rect.top + rect.height / 2
+  const emojis = ['?', '?', '??', '??']
+
+  for (let i = 0; i < 6; i++) {
+    const el = document.createElement('div')
+    el.textContent = emojis[i % emojis.length]
+    el.style.cssText = `
+      position:fixed; left:${cx}px; top:${cy}px;
+      font-size:${22 + Math.random() * 14}px;
+      pointer-events:none; z-index:9999;
+      transform:translate(-50%,-50%);
+    `
+    document.body.appendChild(el)
+    gsap.to(el, {
+      x: -60 + Math.random() * 120,
+      y: -70 - Math.random() * 80,
+      opacity: 0,
+      scale: 0.4,
+      duration: 0.9 + Math.random() * 0.5,
+      ease: 'power2.out',
+      onComplete: () => el.remove(),
+    })
+  }
 }
