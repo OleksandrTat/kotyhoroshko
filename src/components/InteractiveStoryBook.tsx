@@ -8,6 +8,7 @@ import SceneHotspots from '@/components/SceneHotspots'
 import { SceneLayer } from '@/components/SceneLayer'
 import WeatherEffect from '@/components/WeatherEffect'
 import { ScrollHint } from '@/components/ScrollHint'
+import { NarratorCharacter } from '@/components/NarratorCharacter'
 import { TOTAL_SCENES, type Scene, type SceneInteraction, type SceneTheme } from '@/content/scenes'
 import { createStoryAudioEngine, type StoryAudioEngine } from '@/lib/storyAudioEngine'
 import { cancelBrowserNarration, requestPremiumNarration, speakWithBrowserVoice } from '@/lib/storyNarration'
@@ -1330,6 +1331,7 @@ export function InteractiveStoryBook({ scenes }: Props) {
   }, [])
 
   const activeChapter = useMemo(() => getChapterForScene(activeSceneId), [activeSceneId])
+  const activeScene = scenes[activeSceneId - 1]
 
   const previousChapterRef = useRef(activeChapter)
 
@@ -1396,6 +1398,11 @@ export function InteractiveStoryBook({ scenes }: Props) {
         </main>
 
         <ScrollHint visible={showScrollHint && !showIntro} />
+        <NarratorCharacter
+          line={activeScene?.narrator.line ?? ''}
+          isVisible={!showIntro}
+          isSpeaking={audioEnabled}
+        />
       </div>
     </>
   )
