@@ -1,13 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type RefObject, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type RefObject } from 'react'
 import Lenis from 'lenis'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import SceneHotspots from '@/components/SceneHotspots'
 import { SceneLayer } from '@/components/SceneLayer'
 import WeatherEffect from '@/components/WeatherEffect'
-import { ChapterProgressBar } from '@/components/ChapterProgressBar'
 import { ScrollHint } from '@/components/ScrollHint'
 import { TOTAL_SCENES, type Scene, type SceneInteraction, type SceneTheme } from '@/content/scenes'
 import { createStoryAudioEngine, type StoryAudioEngine } from '@/lib/storyAudioEngine'
@@ -592,14 +591,12 @@ function MinimalHUD({
   totalScenes,
   audioEnabled,
   onToggleAudio,
-  onNarrate,
   onGoToIntro,
 }: {
   activeScene: number
   totalScenes: number
   audioEnabled: boolean
   onToggleAudio: () => void
-  onNarrate: () => void
   onGoToIntro: () => void
 }) {
   return (
@@ -608,77 +605,71 @@ function MinimalHUD({
         <div className="progress-bar-fill" style={{ width: `${(activeScene / totalScenes) * 100}%` }} />
       </div>
 
-      <div
+      <div style={{
+        position: 'fixed',
+        top: 12,
+        right: 16,
+        color: 'rgba(255,255,255,0.4)',
+        fontSize: 11,
+        fontFamily: 'monospace',
+        zIndex: 100,
+        letterSpacing: '0.1em',
+      }}>
+        {activeScene}/{totalScenes}
+      </div>
+
+      <button
+        onClick={onToggleAudio}
         style={{
           position: 'fixed',
-          top: 20,
-          right: 24,
-          color: 'rgba(255,255,255,0.45)',
-          fontSize: '11px',
-          letterSpacing: '0.12em',
-          fontVariantNumeric: 'tabular-nums',
+          top: 12,
+          left: 16,
+          width: 56,
+          height: 56,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.1)',
+          border: '2px solid rgba(255,255,255,0.2)',
+          color: 'rgba(255,255,255,0.8)',
+          fontSize: 24,
+          cursor: 'pointer',
           zIndex: 100,
-          fontFamily: 'monospace',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
+        title={audioEnabled ? 'Вимкнути звук' : 'Увімкнути звук'}
+        type="button"
       >
-        {String(activeScene).padStart(2, '0')} / {String(totalScenes).padStart(2, '0')}
-      </div>
+        {audioEnabled ? '🔊' : '🔇'}
+      </button>
 
-      <div style={{ position: 'fixed', top: 16, left: 20, display: 'flex', gap: 10, zIndex: 100 }}>
-        <HudButton onClick={onGoToIntro} title="Portada del cuento">
-          {'⌂'}
-        </HudButton>
-        <HudButton onClick={onToggleAudio} title={audioEnabled ? 'Desactivar sonido' : 'Activar sonido'}>
-          {audioEnabled ? '♪' : '♪̶'}
-        </HudButton>
-        <HudButton onClick={onNarrate} title="Narrar esta escena">
-          {'◉'}
-        </HudButton>
-      </div>
+      <button
+        onClick={onGoToIntro}
+        style={{
+          position: 'fixed',
+          top: 12,
+          left: 80,
+          width: 56,
+          height: 56,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.1)',
+          border: '2px solid rgba(255,255,255,0.2)',
+          color: 'rgba(255,255,255,0.8)',
+          fontSize: 24,
+          cursor: 'pointer',
+          zIndex: 100,
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        title="Головна"
+        type="button"
+      >
+        🏠
+      </button>
     </>
-  )
-}
-
-function HudButton({
-  onClick,
-  title,
-  children,
-}: {
-  onClick: () => void
-  title: string
-  children: ReactNode
-}) {
-  return (
-    <button
-      onClick={onClick}
-      title={title}
-      style={{
-        background: 'rgba(255,255,255,0.07)',
-        border: '1px solid rgba(255,255,255,0.12)',
-        borderRadius: '50%',
-        width: 36,
-        height: 36,
-        color: 'rgba(255,255,255,0.6)',
-        fontSize: 14,
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backdropFilter: 'blur(8px)',
-        transition: 'all 0.2s ease',
-      }}
-      onMouseEnter={(event) => {
-        event.currentTarget.style.background = 'rgba(255,255,255,0.15)'
-        event.currentTarget.style.color = 'rgba(255,255,255,0.95)'
-      }}
-      onMouseLeave={(event) => {
-        event.currentTarget.style.background = 'rgba(255,255,255,0.07)'
-        event.currentTarget.style.color = 'rgba(255,255,255,0.6)'
-      }}
-      type="button"
-    >
-      {children}
-    </button>
   )
 }
 
@@ -1378,17 +1369,6 @@ export function InteractiveStoryBook({ scenes }: Props) {
           totalScenes={scenes.length}
           audioEnabled={audioEnabled}
           onToggleAudio={() => setAudioEnabled((current) => !current)}
-          onNarrate={() => {
-            const scene = scenes[activeSceneId - 1]
-            if (!scene) {
-              return
-            }
-            if (!audioEnabled) {
-              setAudioEnabled(true)
-              return
-            }
-            void playSceneNarration(scene)
-          }}
           onGoToIntro={handleGoToIntro}
         />
 
@@ -1414,13 +1394,6 @@ export function InteractiveStoryBook({ scenes }: Props) {
             />
           ))}
         </main>
-
-        <ChapterProgressBar
-          chapters={STORY_CHAPTERS}
-          scenes={scenes}
-          activeSceneId={activeSceneId}
-          onSelectScene={(id) => scrollToScene(id, { haptic: true })}
-        />
 
         <ScrollHint visible={showScrollHint && !showIntro} />
       </div>
