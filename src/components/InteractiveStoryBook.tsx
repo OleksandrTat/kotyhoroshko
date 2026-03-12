@@ -423,25 +423,25 @@ function StorySection({
             </div>
           </div>
         ) : (
-          <div className={`relative z-20 mt-auto grid items-end gap-4 ${isClean ? 'pb-8' : 'pb-12 lg:grid-cols-[minmax(0,1.1fr)_auto] lg:gap-6'}`}>
+          <div className={`relative z-20 mt-auto grid items-end gap-4 ${isClean ? 'w-full' : 'pb-12 lg:grid-cols-[minmax(0,1.1fr)_auto] lg:gap-6'}`}>
             {isClean ? (
               <div
                 data-animate="rise"
-                className="story-panel story-panel-wrap w-full max-w-[min(40rem,92vw)] rounded-[1.6rem] border border-[rgba(var(--color-accent),0.22)] bg-[rgba(12,7,5,0.78)] p-4 shadow-[0_22px_54px_rgba(0,0,0,0.36)] backdrop-blur-xl sm:p-5"
+                className="story-panel story-panel-wrap relative z-20 mt-auto w-full px-4 pb-20 rounded-[1.6rem] border border-[rgba(var(--color-accent),0.22)] bg-[rgba(12,7,5,0.78)] p-4 shadow-[0_22px_54px_rgba(0,0,0,0.36)] backdrop-blur-xl md:w-auto md:max-w-[420px] md:px-6 md:pb-8 sm:p-5"
               >
                 <p className="text-[10px] uppercase tracking-[0.28em] text-[rgba(var(--color-accent),0.58)]">
                   Escena {scene.id}/{TOTAL_SCENES} - {chapter.label}
                 </p>
                 <h2 className="mt-3 text-3xl leading-none text-[rgba(var(--color-accent),0.98)] sm:text-4xl">{scene.title}</h2>
-                <p ref={revealRef} className="mt-3 text-base leading-relaxed text-[rgba(var(--color-accent),0.9)] sm:text-lg">{scene.text[0]}</p>
+                <p ref={revealRef} className="mt-3 text-[1.1rem] leading-relaxed text-[rgba(var(--color-accent),0.9)]">{scene.text[0]}</p>
                 {scene.text[1] ? (
-                  <p className="mt-2 text-sm leading-relaxed text-[rgba(var(--color-accent),0.74)] sm:text-base">{scene.text[1]}</p>
+                  <p className="mt-2 text-[1.1rem] leading-relaxed text-[rgba(var(--color-accent),0.74)]">{scene.text[1]}</p>
                 ) : null}
-                <p className="mt-4 text-sm text-[rgba(var(--color-accent),0.78)]">
+                <p className="mt-4 text-[1.1rem] text-[rgba(var(--color-accent),0.78)]">
                   {scene.narrator.name}: {scene.narrator.line}
                 </p>
                 <p className="mt-4 text-xs uppercase tracking-[0.24em] text-[rgba(var(--color-accent),0.6)]">{scene.interaction.label}</p>
-                <div className={`mt-2 rounded-[1rem] border px-3 py-2 text-sm leading-relaxed shadow-inner transition-all duration-500 ${
+                <div className={`mt-2 rounded-[1rem] border px-3 py-2 text-[1.1rem] leading-relaxed shadow-inner transition-all duration-500 ${
                   activated
                     ? 'border-[rgba(203,255,199,0.28)] bg-[rgba(50,98,52,0.26)] text-[rgba(231,255,230,0.92)]'
                     : 'border-[rgba(var(--color-accent),0.14)] bg-[rgba(255,255,255,0.03)] text-[rgba(var(--color-accent),0.7)]'
@@ -1402,4 +1402,5 @@ export function InteractiveStoryBook({ scenes }: Props) {
     </>
   )
 }
+
 
