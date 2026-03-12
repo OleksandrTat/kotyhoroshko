@@ -10,6 +10,7 @@ import WeatherEffect from '@/components/WeatherEffect'
 import { ScrollHint } from '@/components/ScrollHint'
 import { NarratorCharacter } from '@/components/NarratorCharacter'
 import { DialogueBubbleComponent } from '@/components/DialogueBubble'
+import { useTextReveal } from '@/hooks/useTextReveal'
 import { TOTAL_SCENES, type Scene, type SceneInteraction, type SceneTheme } from '@/content/scenes'
 import { createStoryAudioEngine, type StoryAudioEngine } from '@/lib/storyAudioEngine'
 import { cancelBrowserNarration, requestPremiumNarration, speakWithBrowserVoice } from '@/lib/storyNarration'
@@ -403,6 +404,7 @@ function StorySection({
   const hotspots = scene.hotspots && scene.hotspots.length > 0 ? scene.hotspots : fallbackHotspots
 
   useParallaxCursor(sectionElementRef, parallaxLayers)
+  const revealRef = useTextReveal(activeSceneIndex === index)
 
   return (
     <section
@@ -451,8 +453,11 @@ function StorySection({
         {isTheater ? (
           <div className="relative z-20 mt-auto pb-8">
             <div className="mx-auto w-[min(92vw,62rem)] rounded-[1.8rem] bg-[rgba(8,5,4,0.7)] px-6 py-4 text-center text-[clamp(1.1rem,1.6vw,1.8rem)] leading-relaxed text-[rgba(var(--color-accent),0.96)] shadow-[0_18px_42px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-              {scene.text.map((paragraph) => (
-                <p key={paragraph} className="mt-2 first:mt-0">
+              <p ref={revealRef} className="mt-2 first:mt-0">
+                {scene.text[0]}
+              </p>
+              {scene.text.slice(1).map((paragraph) => (
+                <p key={paragraph} className="mt-2">
                   {paragraph}
                 </p>
               ))}
@@ -469,7 +474,7 @@ function StorySection({
                   Escena {scene.id}/{TOTAL_SCENES} - {chapter.label}
                 </p>
                 <h2 className="mt-3 text-3xl leading-none text-[rgba(var(--color-accent),0.98)] sm:text-4xl">{scene.title}</h2>
-                <p className="mt-3 text-base leading-relaxed text-[rgba(var(--color-accent),0.9)] sm:text-lg">{scene.text[0]}</p>
+                <p ref={revealRef} className="mt-3 text-base leading-relaxed text-[rgba(var(--color-accent),0.9)] sm:text-lg">{scene.text[0]}</p>
                 {scene.text[1] ? (
                   <p className="mt-2 text-sm leading-relaxed text-[rgba(var(--color-accent),0.74)] sm:text-base">{scene.text[1]}</p>
                 ) : null}
@@ -521,7 +526,7 @@ function StorySection({
                   </div>
 
                   <h2 className="mt-4 text-4xl leading-none text-[rgba(var(--color-accent),0.98)] sm:text-5xl">{scene.title}</h2>
-                  <p className="mt-4 max-w-[30rem] text-lg leading-relaxed text-[rgba(var(--color-accent),0.92)] sm:text-xl">{scene.text[0]}</p>
+                  <p ref={revealRef} className="mt-4 max-w-[30rem] text-lg leading-relaxed text-[rgba(var(--color-accent),0.92)] sm:text-xl">{scene.text[0]}</p>
                   {scene.text[1] ? (
                     <p className="mt-3 max-w-[28rem] text-base leading-relaxed text-[rgba(var(--color-accent),0.72)] sm:text-lg">{scene.text[1]}</p>
                   ) : null}
