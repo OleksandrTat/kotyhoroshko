@@ -24,6 +24,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: 'Kotyhoroshko | cuento interactivo infantil',
   description: 'Cuento interactivo infantil de Kotyhoroshko con scroll suave, narrador, animaciones, tacto y audio.',
+  manifest: '/manifest.json',
   keywords: ['cuento infantil', 'Kotyhoroshko', 'cuento interactivo', 'Next.js', 'GSAP', 'Lenis', 'cuento clasico'],
   authors: [{ name: 'Kotyhoroshko Tale' }],
   alternates: {
