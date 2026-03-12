@@ -7,6 +7,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import SceneHotspots from '@/components/SceneHotspots'
 import { SceneLayer } from '@/components/SceneLayer'
 import WeatherEffect from '@/components/WeatherEffect'
+import { ChapterProgressBar } from '@/components/ChapterProgressBar'
+import { ScrollHint } from '@/components/ScrollHint'
 import { TOTAL_SCENES, type Scene, type SceneInteraction, type SceneTheme } from '@/content/scenes'
 import { createStoryAudioEngine, type StoryAudioEngine } from '@/lib/storyAudioEngine'
 import { cancelBrowserNarration, requestPremiumNarration, speakWithBrowserVoice } from '@/lib/storyNarration'
@@ -78,29 +80,20 @@ const EFFECT_ICONS: Record<SceneInteraction['effect'], string> = {
   sparkle: '✸',
   sway: '〜',
   pulse: '◎',
-  trail: '⟿',
+  trail: '➿',
 }
+
+const BOOKMARK_KEY = 'kotyhoroshko-bookmark'
+const SCROLL_HINT_KEY = 'kotyhoroshko-hint-seen'
+const INTRO_SEEN_KEY = 'kotyhoroshko-intro-seen'
 
 
 function getChapterForScene(sceneId: number) {
   return [...STORY_CHAPTERS].reverse().find((chapter) => sceneId >= chapter.start) ?? STORY_CHAPTERS[0]
 }
 
-function toneToColor(tone: Scene['dialogue'][number]['tone']) {
-  if (tone === 'danger') {
-    return 'border-[rgba(255,137,116,0.4)] bg-[linear-gradient(145deg,rgba(58,24,18,0.92),rgba(34,14,10,0.9))] text-[rgba(255,225,214,0.96)]'
-  }
-  if (tone === 'hero') {
-    return 'border-[rgba(201,232,255,0.32)] bg-[linear-gradient(145deg,rgba(20,34,52,0.9),rgba(10,18,28,0.88))] text-[rgba(231,243,255,0.95)]'
-  }
-  if (tone === 'mystic') {
-    return 'border-[rgba(197,255,201,0.3)] bg-[linear-gradient(145deg,rgba(20,38,28,0.9),rgba(10,20,14,0.88))] text-[rgba(232,255,238,0.96)]'
-  }
-  return 'border-[rgba(255,225,174,0.3)] bg-[linear-gradient(145deg,rgba(36,23,14,0.92),rgba(18,12,8,0.9))] text-[rgba(255,244,224,0.95)]'
-}
-
 function interactionIcon(effect: SceneInteraction['effect']) {
-  return EFFECT_ICONS[effect] ?? '✦'
+  return EFFECT_ICONS[effect] ?? '\u2726'
 }
 
 function isInteractiveTarget(target: EventTarget | null) {
@@ -117,6 +110,152 @@ function hasOpenStoryModal() {
   }
 
   return Boolean(document.querySelector('[data-story-modal="true"]'))
+}
+
+// ─── INTRO SCREEN ────────────────────────────────────────────────────────────
+
+function IntroScreen({
+  scenes,
+  savedBookmark,
+  onStart,
+  onContinue,
+}: {
+  scenes: Scene[]
+  savedBookmark: number | null
+  onStart: () => void
+  onContinue: (sceneId: number) => void
+}) {
+  const coverScene = scenes[0]
+  const bookmarkScene = savedBookmark ? scenes.find((scene) => scene.id === savedBookmark) : null
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const id = window.setTimeout(() => setVisible(true), 80)
+    return () => window.clearTimeout(id)
+  }, [])
+
+  return (
+    <div
+      className={`fixed inset-0 z-[200] flex items-center justify-center transition-opacity duration-700 ${visible ? 'opacity-100' : 'opacity-0'}`}
+      style={{
+        background: 'radial-gradient(ellipse at 30% 20%, rgba(44,23,11,0.98) 0%, rgba(11,10,8,0.99) 60%, rgba(4,3,2,1) 100%)',
+      }}
+    >
+      {coverScene.media.kind === 'image' ? (
+        <div className="absolute inset-0 opacity-[0.14]">
+          <img src={coverScene.media.src} alt="" className="h-full w-full object-cover" aria-hidden="true" />
+        </div>
+      ) : null}
+
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div
+          className="absolute -top-1/4 left-1/4 h-[60vh] w-[60vh] rounded-full opacity-30"
+          style={{ background: 'radial-gradient(circle, rgba(244,188,85,0.35) 0%, transparent 70%)', filter: 'blur(60px)' }}
+        />
+        <div
+          className="absolute -bottom-1/4 right-1/4 h-[50vh] w-[50vh] rounded-full opacity-20"
+          style={{ background: 'radial-gradient(circle, rgba(214,134,76,0.4) 0%, transparent 70%)', filter: 'blur(80px)' }}
+        />
+        {[...Array(8)].map((_, index) => (
+          <div
+            key={index}
+            className="absolute rounded-full"
+            style={{
+              width: `${5 + (index % 4) * 3}px`,
+              height: `${5 + (index % 4) * 3}px`,
+              left: `${10 + index * 11}%`,
+              top: `${20 + ((index * 17) % 60)}%`,
+              background: 'radial-gradient(circle, rgba(255,225,174,0.9) 0%, rgba(244,188,85,0.3) 60%, transparent 80%)',
+              animation: `float ${6 + index * 0.7}s ease-in-out ${index * 0.4}s infinite`,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="relative z-10 flex w-full max-w-lg flex-col items-center px-6 text-center">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="h-px w-16 bg-[linear-gradient(90deg,transparent,rgba(244,188,85,0.6))]" />
+          <span className="text-[rgba(244,188,85,0.7)] text-lg">{'\u2726'}</span>
+          <div className="h-px w-16 bg-[linear-gradient(90deg,rgba(244,188,85,0.6),transparent)]" />
+        </div>
+
+        <p
+          className="mb-4 text-[10px] uppercase tracking-[0.38em] text-[rgba(255,225,174,0.55)]"
+          style={{ fontFamily: 'var(--font-body)' }}
+        >
+          Cuento interactivo infantil
+        </p>
+
+        <h1
+          className="mb-2 text-6xl leading-none text-[rgba(255,236,204,0.97)] sm:text-7xl"
+          style={{
+            fontFamily: 'var(--font-display)',
+            textShadow: '0 0 80px rgba(244,188,85,0.4), 0 4px 24px rgba(0,0,0,0.8)',
+          }}
+        >
+          Kotyhoroshko
+        </h1>
+
+        <p
+          className="mt-3 max-w-[26rem] text-base leading-relaxed text-[rgba(255,225,174,0.68)]"
+          style={{ fontFamily: 'var(--font-body)', fontStyle: 'italic' }}
+        >
+          La historia del pequeño héroe que venció al dragón con un guisante y mucho valor.
+        </p>
+
+        <p
+          className="mt-3 text-[11px] uppercase tracking-[0.28em] text-[rgba(255,225,174,0.4)]"
+          style={{ fontFamily: 'var(--font-body)' }}
+        >
+          {TOTAL_SCENES} escenas · 6 capítulos
+        </p>
+
+        <div className="my-8 flex w-full items-center gap-3">
+          <div className="h-px flex-1 bg-[linear-gradient(90deg,transparent,rgba(244,188,85,0.28))]" />
+          <span className="text-xs text-[rgba(244,188,85,0.5)]">{'\u2726'} {'\u2726'} {'\u2726'}</span>
+          <div className="h-px flex-1 bg-[linear-gradient(90deg,rgba(244,188,85,0.28),transparent)]" />
+        </div>
+
+        <div className="flex w-full max-w-sm flex-col gap-3">
+          <button
+            type="button"
+            onClick={onStart}
+            className="button-primary btn-glow group relative overflow-hidden rounded-2xl px-8 py-4 text-lg font-bold text-[#2a170b] shadow-2xl transition-all duration-300 hover:scale-[1.02]"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            <span className="absolute inset-0 translate-x-[-120%] bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.3),transparent)] transition-transform duration-700 group-hover:translate-x-[120%]" />
+            <span className="relative flex items-center justify-center gap-2">
+              Empezar el cuento
+              <svg className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0-5 5m5-5H6" />
+              </svg>
+            </span>
+          </button>
+
+          {bookmarkScene ? (
+            <button
+              type="button"
+              onClick={() => onContinue(bookmarkScene.id)}
+              className="rounded-2xl border border-[rgba(255,225,174,0.22)] bg-[rgba(255,255,255,0.04)] px-8 py-3.5 text-sm font-semibold text-[rgba(255,225,174,0.86)] transition-all duration-300 hover:bg-[rgba(255,255,255,0.08)] hover:scale-[1.01]"
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              <span className="mb-1 block text-xs uppercase tracking-[0.22em] text-[rgba(255,225,174,0.5)]">
+                Continuar donde lo dejé
+              </span>
+              <span>Escena {bookmarkScene.id}: {bookmarkScene.title}</span>
+            </button>
+          ) : null}
+        </div>
+
+        <p
+          className="mt-6 text-[10px] uppercase tracking-[0.22em] text-[rgba(255,225,174,0.3)]"
+          style={{ fontFamily: 'var(--font-body)' }}
+        >
+          Usa {'\u2190'} {'\u2192'} o desliza para navegar
+        </p>
+      </div>
+    </div>
+  )
 }
 
 type VisualLayerRefs = {
@@ -268,7 +407,7 @@ function StorySection({
     <section
       id={`scene-${scene.id}`}
       ref={setSectionNode}
-      className="story-section scene-section relative flex min-h-[100svh] min-w-[100svw] snap-start snap-always items-stretch overflow-hidden"
+      className="story-section scene-section relative flex h-[100svh] min-h-[100svh] snap-start snap-always items-stretch overflow-hidden"
       aria-label={`Escena ${scene.id}: ${scene.title}`}
       style={
         {
@@ -300,7 +439,7 @@ function StorySection({
         aria-hidden="true"
       />
 
-      <div className="relative z-20 flex w-full flex-col justify-between px-4 pb-[calc(1.4rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] sm:px-7 lg:px-12">
+      <div className="relative z-20 flex w-full flex-col justify-between px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] sm:px-7 lg:px-12">
         {!isTheater ? (
           <SceneHotspots
             hotspots={hotspots}
@@ -454,12 +593,14 @@ function MinimalHUD({
   audioEnabled,
   onToggleAudio,
   onNarrate,
+  onGoToIntro,
 }: {
   activeScene: number
   totalScenes: number
   audioEnabled: boolean
   onToggleAudio: () => void
   onNarrate: () => void
+  onGoToIntro: () => void
 }) {
   return (
     <>
@@ -483,21 +624,15 @@ function MinimalHUD({
         {String(activeScene).padStart(2, '0')} / {String(totalScenes).padStart(2, '0')}
       </div>
 
-      <div
-        style={{
-          position: 'fixed',
-          top: 16,
-          left: 20,
-          display: 'flex',
-          gap: 12,
-          zIndex: 100,
-        }}
-      >
-        <HudButton onClick={onToggleAudio} title={audioEnabled ? 'Вимкнути звук' : 'Увімкнути звук'}>
+      <div style={{ position: 'fixed', top: 16, left: 20, display: 'flex', gap: 10, zIndex: 100 }}>
+        <HudButton onClick={onGoToIntro} title="Portada del cuento">
+          {'⌂'}
+        </HudButton>
+        <HudButton onClick={onToggleAudio} title={audioEnabled ? 'Desactivar sonido' : 'Activar sonido'}>
           {audioEnabled ? '♪' : '♪̶'}
         </HudButton>
-        <HudButton onClick={onNarrate} title="Прочитати сцену">
-          ◉
+        <HudButton onClick={onNarrate} title="Narrar esta escena">
+          {'◉'}
         </HudButton>
       </div>
     </>
@@ -564,11 +699,64 @@ export function InteractiveStoryBook({ scenes }: Props) {
   const [activatedScenes, setActivatedScenes] = useState<Record<number, boolean>>({})
   const [chapterTransition, setChapterTransition] = useState(false)
   const [isReady, setIsReady] = useState(false)
+  const [showIntro, setShowIntro] = useState(true)
+  const [savedBookmark, setSavedBookmark] = useState<number | null>(null)
+  const [showScrollHint, setShowScrollHint] = useState(false)
   const uiMode: UiMode = 'clean'
 
   useEffect(() => {
     setIsReady(true)
+
+    try {
+      const raw = window.localStorage.getItem(BOOKMARK_KEY)
+      if (raw) {
+        const parsed = Number(raw)
+        if (!Number.isNaN(parsed) && parsed >= 1 && parsed <= TOTAL_SCENES) {
+          setSavedBookmark(parsed)
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    try {
+      const seen = window.sessionStorage.getItem(INTRO_SEEN_KEY)
+      if (seen) {
+        setShowIntro(false)
+      }
+    } catch {
+      // ignore
+    }
   }, [])
+
+  useEffect(() => {
+    if (!isReady || showIntro) {
+      return
+    }
+    try {
+      window.localStorage.setItem(BOOKMARK_KEY, String(activeSceneId))
+    } catch {
+      // ignore
+    }
+  }, [activeSceneId, isReady, showIntro])
+
+  useEffect(() => {
+    if (showIntro) {
+      return
+    }
+    try {
+      const seen = window.localStorage.getItem(SCROLL_HINT_KEY)
+      if (seen) {
+        return
+      }
+      setShowScrollHint(true)
+      window.localStorage.setItem(SCROLL_HINT_KEY, '1')
+      const id = window.setTimeout(() => setShowScrollHint(false), 4000)
+      return () => window.clearTimeout(id)
+    } catch {
+      // ignore
+    }
+  }, [showIntro])
 
   const stopNarration = useCallback(() => {
     narrationAbortRef.current?.abort()
@@ -640,32 +828,11 @@ export function InteractiveStoryBook({ scenes }: Props) {
     })
   }, [stopNarration])
 
-  const handleToggleAudio = useCallback(() => {
-    setAudioEnabled((current) => {
-      const next = !current
-      return next
-    })
-  }, [])
-
   const triggerHaptic = useCallback(() => {
     if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
       navigator.vibrate(8)
     }
   }, [])
-
-  const handleReplayNarration = useCallback(() => {
-    const currentScene = scenes[activeSceneId - 1]
-    if (!currentScene) {
-      return
-    }
-
-    if (!audioEnabled) {
-      setAudioEnabled(true)
-      return
-    }
-
-    void playSceneNarration(currentScene)
-  }, [activeSceneId, audioEnabled, playSceneNarration, scenes, setAudioEnabled])
 
   const scrollToScene = useCallback(
     (sceneId: number, options?: { duration?: number; immediate?: boolean; haptic?: boolean }) => {
@@ -679,13 +846,43 @@ export function InteractiveStoryBook({ scenes }: Props) {
         triggerHaptic()
       }
 
-      lenisRef.current.scrollTo(target, {
+      const targetOffset = target.offsetTop
+      lenisRef.current.scrollTo(targetOffset, {
         duration: options?.duration ?? 0.5,
         immediate: options?.immediate ?? false,
       })
     },
     [scenes.length, triggerHaptic],
   )
+
+  const handleStartStory = useCallback(() => {
+    setShowIntro(false)
+    try {
+      window.sessionStorage.setItem(INTRO_SEEN_KEY, '1')
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  const handleContinueFromBookmark = useCallback((sceneId: number) => {
+    setShowIntro(false)
+    try {
+      window.sessionStorage.setItem(INTRO_SEEN_KEY, '1')
+    } catch {
+      // ignore
+    }
+    window.setTimeout(() => scrollToScene(sceneId, { immediate: true }), 120)
+  }, [scrollToScene])
+
+  const handleGoToIntro = useCallback(() => {
+    stopNarration()
+    setShowIntro(true)
+    try {
+      window.sessionStorage.removeItem(INTRO_SEEN_KEY)
+    } catch {
+      // ignore
+    }
+  }, [stopNarration])
 
   const handleSwipeStart = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
     if (event.pointerType === 'mouse') {
@@ -712,7 +909,7 @@ export function InteractiveStoryBook({ scenes }: Props) {
     const deltaX = event.clientX - swipeState.startX
     const deltaY = event.clientY - swipeState.startY
 
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+    if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 10) {
       event.preventDefault()
     }
   }, [])
@@ -727,16 +924,16 @@ export function InteractiveStoryBook({ scenes }: Props) {
     const deltaX = event.clientX - swipeState.startX
     const deltaY = event.clientY - swipeState.startY
     const elapsed = Math.max(Date.now() - swipeState.startTime, 1)
-    const velocity = Math.abs(deltaX) / elapsed
+    const velocity = Math.abs(deltaY) / elapsed
 
-    if (Math.abs(deltaX) < 40 && velocity < 0.3) {
+    if (Math.abs(deltaY) < 40 && velocity < 0.3) {
       return
     }
-    if (Math.abs(deltaX) < Math.abs(deltaY)) {
+    if (Math.abs(deltaY) < Math.abs(deltaX)) {
       return
     }
 
-    if (deltaX < 0) {
+    if (deltaY > 0) {
       scrollToScene(activeSceneId + 1, { haptic: true })
     } else {
       scrollToScene(activeSceneId - 1, { haptic: true })
@@ -750,18 +947,14 @@ export function InteractiveStoryBook({ scenes }: Props) {
       return
     }
 
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const isTouchDevice = window.matchMedia('(pointer: coarse)').matches
     const lenis = new Lenis({
       wrapper: containerRef.current,
       content: scrollContentRef.current,
-      orientation: 'horizontal',
-      gestureOrientation: 'both',
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
       smoothWheel: true,
       syncTouch: true,
-      duration: prefersReducedMotion ? 0.4 : 0.6,
-      touchMultiplier: isTouchDevice ? 1.2 : 1.6,
-      wheelMultiplier: 1,
+      duration: 1.2,
       snap: true,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     })
@@ -784,9 +977,9 @@ export function InteractiveStoryBook({ scenes }: Props) {
         window.clearTimeout(snapTimer)
       }
       snapTimer = window.setTimeout(() => {
-        const sectionWidth = Math.max(containerRef.current?.clientWidth ?? window.innerWidth, 1)
-        const nearestIndex = Math.round(latestScroll / sectionWidth)
-        const targetOffset = nearestIndex * sectionWidth
+        const sectionHeight = Math.max(containerRef.current?.clientHeight ?? window.innerHeight, 1)
+        const nearestIndex = Math.round(latestScroll / sectionHeight)
+        const targetOffset = nearestIndex * sectionHeight
         if (Math.abs(latestScroll - targetOffset) < 2) {
           return
         }
@@ -811,9 +1004,8 @@ export function InteractiveStoryBook({ scenes }: Props) {
 
         ScrollTrigger.create({
           trigger: section,
-          start: 'left center',
-          end: 'right center',
-          horizontal: true,
+          start: 'top center',
+          end: 'bottom center',
           onEnter: () => setActiveSceneId(index + 1),
           onEnterBack: () => setActiveSceneId(index + 1),
         })
@@ -867,10 +1059,9 @@ export function InteractiveStoryBook({ scenes }: Props) {
             scale: 1,
             scrollTrigger: {
               trigger: section,
-              horizontal: true,
               scroller: containerRef.current,
-              start: 'left 20%',
-              end: 'right 80%',
+              start: 'top 80%',
+              end: 'bottom 20%',
               scrub: 0.3,
             },
           },
@@ -889,27 +1080,42 @@ export function InteractiveStoryBook({ scenes }: Props) {
       if (isInteractiveTarget(event.target) || hasOpenStoryModal()) {
         return
       }
-      if (event.key === 'ArrowRight') {
+      if (showIntro && event.key === 'Enter') {
+        handleStartStory()
+        return
+      }
+      if (event.key === 'Escape' && !showIntro) {
+        handleGoToIntro()
+        return
+      }
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
         event.preventDefault()
         scrollToScene(activeSceneId + 1, { haptic: true })
       }
-      if (event.key === 'ArrowLeft') {
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
         event.preventDefault()
         scrollToScene(activeSceneId - 1, { haptic: true })
       }
       if (event.key === 'm' || event.key === 'M') {
         event.preventDefault()
-        handleToggleAudio()
+        setAudioEnabled((current) => !current)
       }
       if (event.key === 'n' || event.key === 'N') {
         event.preventDefault()
-        handleReplayNarration()
+        const scene = scenes[activeSceneId - 1]
+        if (scene) {
+          if (!audioEnabled) {
+            setAudioEnabled(true)
+          } else {
+            void playSceneNarration(scene)
+          }
+        }
       }
     }
 
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [activeSceneId, handleReplayNarration, handleToggleAudio, scrollToScene])
+  }, [activeSceneId, audioEnabled, handleGoToIntro, handleStartStory, playSceneNarration, scenes, scrollToScene, showIntro])
 
   useEffect(() => {
     const synth = window.speechSynthesis
@@ -1149,45 +1355,76 @@ export function InteractiveStoryBook({ scenes }: Props) {
   }, [activeChapter])
 
   return (
-    <div
-      ref={containerRef}
-      className={`story-scroll scroll-container relative min-h-[100svh] bg-[#080604] text-white ${isReady ? 'storybook-enter' : 'opacity-0'}`}
-      onPointerDown={handleSwipeStart}
-      onPointerMove={handleSwipeMove}
-      onPointerUp={handleSwipeEnd}
-      onPointerCancel={handleSwipeEnd}
-    >
-      <MinimalHUD
-        activeScene={activeSceneId}
-        totalScenes={scenes.length}
-        audioEnabled={audioEnabled}
-        onToggleAudio={handleToggleAudio}
-        onNarrate={handleReplayNarration}
-      />
+    <>
+      {showIntro ? (
+        <IntroScreen
+          scenes={scenes}
+          savedBookmark={savedBookmark}
+          onStart={handleStartStory}
+          onContinue={handleContinueFromBookmark}
+        />
+      ) : null}
 
-      <main
-        ref={(node) => {
-          scrollContentRef.current = node
-        }}
-        className={`scenes-container ${chapterTransition ? 'chapter-enter' : ''}`}
+      <div
+        ref={containerRef}
+        className={`story-scroll scroll-container relative min-h-[100svh] bg-[#080604] text-white ${isReady ? 'storybook-enter' : 'opacity-0'}`}
+        onPointerDown={handleSwipeStart}
+        onPointerMove={handleSwipeMove}
+        onPointerUp={handleSwipeEnd}
+        onPointerCancel={handleSwipeEnd}
       >
-        {scenes.map((scene, index) => (
-          <StorySection
-            key={scene.id}
-            scene={scene}
-            index={index}
-            activeSceneIndex={activeSceneId - 1}
-            activated={Boolean(activatedScenes[scene.id])}
-            uiMode={uiMode}
-            onActivate={handleActivate}
-            onShare={handleShareScene}
-            sectionRef={(element) => {
-              sectionRefs.current[index] = element
-            }}
-          />
-        ))}
-      </main>
-    </div>
+        <MinimalHUD
+          activeScene={activeSceneId}
+          totalScenes={scenes.length}
+          audioEnabled={audioEnabled}
+          onToggleAudio={() => setAudioEnabled((current) => !current)}
+          onNarrate={() => {
+            const scene = scenes[activeSceneId - 1]
+            if (!scene) {
+              return
+            }
+            if (!audioEnabled) {
+              setAudioEnabled(true)
+              return
+            }
+            void playSceneNarration(scene)
+          }}
+          onGoToIntro={handleGoToIntro}
+        />
+
+        <main
+          ref={(node) => {
+            scrollContentRef.current = node
+          }}
+          className={`scenes-container ${chapterTransition ? 'chapter-enter' : ''}`}
+        >
+          {scenes.map((scene, index) => (
+            <StorySection
+              key={scene.id}
+              scene={scene}
+              index={index}
+              activeSceneIndex={activeSceneId - 1}
+              activated={Boolean(activatedScenes[scene.id])}
+              uiMode={uiMode}
+              onActivate={handleActivate}
+              onShare={handleShareScene}
+              sectionRef={(element) => {
+                sectionRefs.current[index] = element
+              }}
+            />
+          ))}
+        </main>
+
+        <ChapterProgressBar
+          chapters={STORY_CHAPTERS}
+          scenes={scenes}
+          activeSceneId={activeSceneId}
+          onSelectScene={(id) => scrollToScene(id, { haptic: true })}
+        />
+
+        <ScrollHint visible={showScrollHint && !showIntro} />
+      </div>
+    </>
   )
 }
 

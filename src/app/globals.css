@@ -989,16 +989,16 @@ button, a, .interactive {
 
 .story-scroll {
   overscroll-behavior: contain;
-  touch-action: pan-x;
+  touch-action: pan-y;
   width: 100svw;
   height: 100svh;
 }
 
 .scroll-container {
-  scroll-snap-type: x mandatory;
+  scroll-snap-type: y mandatory;
   -webkit-overflow-scrolling: touch;
-  overflow-x: scroll;
-  overflow-y: hidden;
+  overflow-x: hidden;
+  overflow-y: scroll;
   scrollbar-width: none;
 }
 
@@ -1008,12 +1008,12 @@ button, a, .interactive {
 
 .scenes-container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   gap: 0;
   padding: 0;
   margin: 0;
   min-height: 100svh;
-  width: max-content;
+  width: 100%;
 }
 
 .scene-image-boost {
@@ -1029,9 +1029,9 @@ button, a, .interactive {
 
 html[data-story-mode='scroll'] .story-scroll > main {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   min-height: 100svh;
-  width: max-content;
+  width: 100%;
 }
 
 @media (min-width: 768px) {
@@ -1100,11 +1100,10 @@ html[data-story-mode='scroll'] .story-section,
 html[data-story-mode='scroll'] .scene-section {
   scroll-snap-align: start;
   scroll-snap-stop: always;
-  flex: 0 0 100vw;
   width: 100vw;
   min-width: 100vw;
-  min-height: 100svh;
   height: 100svh;
+  min-height: 100svh;
   flex-direction: column;
   position: relative;
   overflow: hidden;
