@@ -96,6 +96,31 @@ export function AtmosphereGSAP({ type }: Props) {
         }
       }
 
+      if (type === 'rain') {
+        for (let i = 0; i < 24; i++) {
+          const drop = document.createElement('div')
+          drop.style.cssText = `
+            position:absolute;
+            width:2px;
+            height:${14 + Math.random() * 14}px;
+            left:${Math.random() * 100}%;
+            top:-12%;
+            background:linear-gradient(to bottom, rgba(195,220,255,0.1), rgba(195,220,255,0.75));
+            pointer-events:none;
+            border-radius:9999px;
+          `
+          el.appendChild(drop)
+          gsap.to(drop, {
+            y: '115vh',
+            x: -10 + Math.random() * 20,
+            duration: 0.9 + Math.random() * 0.8,
+            repeat: -1,
+            delay: Math.random() * 1.4,
+            ease: 'none',
+          })
+        }
+      }
+
       if (type === 'magic' || type === 'starlight') {
         for (let i = 0; i < 12; i++) {
           const star = document.createElement('div')
