@@ -333,6 +333,7 @@ function StorySection({
   const backgroundRef = useRef<HTMLDivElement>(null)
   const midgroundRef = useRef<HTMLDivElement>(null)
   const foregroundRef = useRef<HTMLDivElement>(null)
+  const [videoTapDone, setVideoTapDone] = useState(false)
   const parallaxLayers = useMemo(() => [backgroundRef, midgroundRef, foregroundRef], [])
 
   const setSectionNode = useCallback(
@@ -359,6 +360,10 @@ function StorySection({
 
   useParallaxCursor(sectionElementRef, parallaxLayers)
   const revealRef = useTextReveal(activeSceneIndex === index)
+
+  useEffect(() => {
+    setVideoTapDone(false)
+  }, [scene.id])
 
   return (
     <section
@@ -546,7 +551,34 @@ function StorySection({
           ))}
         </div>
       ) : null}
+
+      {scene.media.kind === 'video' && scene.videoGame && !videoTapDone ? (
+        <VideoTapOverlay
+          onComplete={() => {
+            setVideoTapDone(true)
+            onActivate(scene, null)
+          }}
+        />
+      ) : null}
     </section>
+  )
+}
+
+function VideoTapOverlay({ onComplete }: { onComplete: () => void }) {
+  return (
+    <button
+      onClick={onComplete}
+      className="absolute inset-0 z-50 flex items-center justify-center bg-black/20 cursor-pointer"
+      style={{ WebkitTapHighlightColor: 'transparent' }}
+      type="button"
+    >
+      <div
+        className="rounded-full bg-[rgba(255,225,174,0.9)] px-8 py-6 text-2xl font-bold text-[#2a170b] shadow-2xl"
+        style={{ fontFamily: 'var(--font-body)', animation: 'bounceSlow 2s infinite' }}
+      >
+        👆 Торкнись!
+      </div>
+    </button>
   )
 }
 
