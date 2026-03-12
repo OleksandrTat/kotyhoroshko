@@ -1,94 +1,97 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type CSSProperties } from 'react'
 import { gsap } from 'gsap'
+import type { DialogueBubble as DialogueType } from '@/content/scenes'
 
-type TailPos = 'bottom-left' | 'bottom-right'
-
-type Props = {
+const TONE_STYLES: Record<NonNullable<DialogueType['tone']>, {
+  bg: string
+  border: string
   text: string
-  character: string
-  characterColor?: string
-  tailPosition?: TailPos
-  visible?: boolean
+  tail: string
+}> = {
+  warm: { bg: '#FFF8E6', border: '#F4BC55', text: '#3a1f0e', tail: '#FFF8E6' },
+  hero: { bg: '#E8F4FF', border: '#4A90D9', text: '#0d2a4a', tail: '#E8F4FF' },
+  danger: { bg: '#FFE8E8', border: '#D94A4A', text: '#4a0d0d', tail: '#FFE8E8' },
+  mystic: { bg: '#EDE8FF', border: '#8B5CF6', text: '#2d1a4a', tail: '#EDE8FF' },
 }
 
-export default function DialogueBubble({
-  text,
-  character,
-  characterColor = '#f4bc55',
-  tailPosition = 'bottom-left',
-  visible = true,
+type Props = {
+  bubble: DialogueType
+  delay?: number
+}
+
+export function DialogueBubbleComponent({
+  bubble,
+  delay = 0,
 }: Props) {
-  const ref = useRef<HTMLDivElement | null>(null)
+  const ref = useRef<HTMLDivElement>(null)
+  const tone = bubble.tone ?? 'warm'
+  const style = TONE_STYLES[tone]
+  const isRight = bubble.align === 'right'
+  const tailStyle: CSSProperties = isRight ? { right: 24 } : { left: 24 }
 
   useEffect(() => {
-    if (!ref.current || !visible) {
-      return
-    }
+    if (!ref.current) return
     gsap.fromTo(
       ref.current,
       {
-        scale: 0.5,
+        scale: 0.3,
         opacity: 0,
-        transformOrigin: tailPosition === 'bottom-left' ? 'bottom left' : 'bottom right',
+        transformOrigin: isRight ? 'bottom right' : 'bottom left',
       },
-      { scale: 1, opacity: 1, duration: 0.45, ease: 'back.out(2)' },
+      {
+        scale: 1,
+        opacity: 1,
+        duration: 0.5,
+        delay,
+        ease: 'back.out(2.5)',
+      },
     )
-  }, [tailPosition, visible])
-
-  if (!visible) {
-    return null
-  }
+  }, [delay, isRight])
 
   return (
-    <div ref={ref} style={{ position: 'relative', display: 'inline-block', maxWidth: '280px' }}>
+    <div
+      ref={ref}
+      className={`relative inline-block max-w-[280px] ${isRight ? 'self-end' : 'self-start'}`}
+    >
       <div
+        className="mb-1 px-3 py-0.5 rounded-full text-xs font-bold inline-block"
+        style={{ background: style.border, color: style.text, fontFamily: 'var(--font-body)' }}
+      >
+        {bubble.speaker}
+      </div>
+
+      <div
+        className="rounded-2xl px-4 py-3 shadow-lg"
         style={{
-          background: 'rgba(255,248,230,0.97)',
-          borderRadius: '18px',
-          padding: '0.75rem 1rem',
-          color: '#1a1008',
+          background: style.bg,
+          border: `2.5px solid ${style.border}`,
           fontFamily: 'var(--font-body)',
           fontStyle: 'italic',
-          fontSize: 'clamp(0.9rem, 2vw, 1.05rem)',
-          lineHeight: 1.5,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.35)',
-          border: `2px solid ${characterColor}33`,
+          fontSize: 'clamp(1.1rem, 2.2vw, 1.25rem)',
+          lineHeight: 1.55,
+          color: style.text,
         }}
       >
-        <span
-          style={{
-            display: 'inline-flex',
-            width: 26,
-            height: 26,
-            borderRadius: '50%',
-            background: characterColor,
-            color: '#1a1008',
-            fontWeight: 700,
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '0.8rem',
-            marginRight: '0.5rem',
-            verticalAlign: 'middle',
-          }}
-        >
-          {character[0]?.toUpperCase()}
-        </span>
-        {text}
+        {bubble.text}
       </div>
+
       <svg
-        width="24"
-        height="18"
-        viewBox="0 0 24 18"
-        fill="rgba(255,248,230,0.97)"
-        style={{
-          position: 'absolute',
-          ...(tailPosition === 'bottom-left' ? { bottom: -16, left: 20 } : {}),
-          ...(tailPosition === 'bottom-right' ? { bottom: -16, right: 20, transform: 'scaleX(-1)' } : {}),
-        }}
+        width="20"
+        height="16"
+        viewBox="0 0 20 16"
+        fill={style.tail}
+        className="absolute -bottom-3"
+        style={tailStyle}
       >
-        <path d="M0 0 L24 0 L12 18 Z" />
+        <path d={isRight ? 'M20 0 L0 0 L14 16 Z' : 'M0 0 L20 0 L6 16 Z'} />
+        <path
+          d={isRight ? 'M20 0 L14 16' : 'M0 0 L6 16'}
+          stroke={style.border}
+          strokeWidth="2.5"
+          fill="none"
+        />
       </svg>
     </div>
   )

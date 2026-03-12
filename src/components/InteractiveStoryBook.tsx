@@ -9,6 +9,7 @@ import { SceneLayer } from '@/components/SceneLayer'
 import WeatherEffect from '@/components/WeatherEffect'
 import { ScrollHint } from '@/components/ScrollHint'
 import { NarratorCharacter } from '@/components/NarratorCharacter'
+import { DialogueBubbleComponent } from '@/components/DialogueBubble'
 import { TOTAL_SCENES, type Scene, type SceneInteraction, type SceneTheme } from '@/content/scenes'
 import { createStoryAudioEngine, type StoryAudioEngine } from '@/lib/storyAudioEngine'
 import { cancelBrowserNarration, requestPremiumNarration, speakWithBrowserVoice } from '@/lib/storyNarration'
@@ -475,15 +476,6 @@ function StorySection({
                 <p className="mt-4 text-sm text-[rgba(var(--color-accent),0.78)]">
                   {scene.narrator.name}: {scene.narrator.line}
                 </p>
-                {scene.dialogue.length ? (
-                  <div className="mt-4 space-y-2 text-sm text-[rgba(var(--color-accent),0.82)]">
-                    {scene.dialogue.map((bubble) => (
-                      <p key={`${scene.id}-${bubble.speaker}-${bubble.text}`}>
-                        <span className="font-semibold">{bubble.speaker}:</span> {bubble.text}
-                      </p>
-                    ))}
-                  </div>
-                ) : null}
                 <p className="mt-4 text-xs uppercase tracking-[0.24em] text-[rgba(var(--color-accent),0.6)]">{scene.interaction.label}</p>
                 <div className={`mt-2 rounded-[1rem] border px-3 py-2 text-sm leading-relaxed shadow-inner transition-all duration-500 ${
                   activated
@@ -583,6 +575,18 @@ function StorySection({
           </div>
         )}
       </div>
+
+      {scene.dialogue.length ? (
+        <div className="pointer-events-none absolute bottom-[calc(6rem+env(safe-area-inset-bottom))] right-4 z-30 flex max-w-[85vw] flex-col items-end gap-6 md:right-8 md:max-w-[420px]">
+          {scene.dialogue.map((bubble, bubbleIndex) => (
+            <DialogueBubbleComponent
+              key={`${scene.id}-${bubble.speaker}-${bubble.text}`}
+              bubble={bubble}
+              delay={bubbleIndex * 0.12}
+            />
+          ))}
+        </div>
+      ) : null}
     </section>
   )
 }
