@@ -4,7 +4,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { assetPath } from '@/lib/assetPath'
 import { navigateWithPageTurn } from '@/lib/pageTurn'
+import { getLastSceneId } from '@/hooks/useSceneProgress'
 
 const PREVIEW_CARDS = [
   {
@@ -24,10 +26,15 @@ const PREVIEW_CARDS = [
 export default function HomePage() {
   const router = useRouter()
   const [isNavigating, setIsNavigating] = useState(false)
+  const [lastSceneId, setLastSceneId] = useState<number | null>(null)
 
   useEffect(() => {
     router.prefetch('/scene/1')
   }, [router])
+
+  useEffect(() => {
+    setLastSceneId(getLastSceneId())
+  }, [])
 
   const handleStart = (event: React.MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault()
@@ -40,6 +47,20 @@ export default function HomePage() {
       router.push('/scene/1')
     }, { direction: 'forward' })
   }
+
+  const handleContinue = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault()
+    if (isNavigating || !lastSceneId) {
+      return
+    }
+
+    setIsNavigating(true)
+    navigateWithPageTurn(() => {
+      router.push(`/scene/${lastSceneId}`)
+    }, { direction: 'forward' })
+  }
+
+  const showContinue = lastSceneId !== null && lastSceneId > 1
 
   return (
     <main className="relative min-h-[100svh] overflow-hidden bg-[#120804]">
@@ -103,29 +124,48 @@ export default function HomePage() {
           </div>
 
           <div className="mt-9 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-            <Link
-              href="/scene/1"
-              onClick={handleStart}
-              aria-label="Empezar la historia desde la primera escena"
-              aria-disabled={isNavigating}
-              className={`button-primary btn-glow animate-hero-lift group relative inline-flex items-center justify-center gap-3 overflow-hidden rounded-[1.6rem] px-8 py-4 text-xl font-bold shadow-2xl shadow-black/45 transition-all duration-300 hover:scale-[1.03] sm:min-w-[18rem] sm:text-2xl ${
-                isNavigating ? 'pointer-events-none opacity-75' : ''
-              }`}
-              style={{ fontFamily: 'var(--font-body)', animationDelay: '0.72s' }}
-            >
-              <span className="absolute inset-0 translate-x-[-125%] bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.3),transparent)] transition-transform duration-700 group-hover:translate-x-[125%]" />
-              <span className="animate-accent-sweep absolute inset-y-0 left-0 w-16 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)] opacity-70" />
-              <span className="relative z-10">Abrir el cuento</span>
-              <svg
-                className="relative z-10 h-6 w-6 transition-transform duration-300 group-hover:translate-x-1.5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
+            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+              {showContinue ? (
+                <Link
+                  href={`/scene/${lastSceneId ?? 1}`}
+                  onClick={handleContinue}
+                  aria-label={`Continuar la historia desde la escena ${lastSceneId ?? 1}`}
+                  aria-disabled={isNavigating}
+                  className={`animate-hero-lift group relative inline-flex items-center justify-center gap-3 overflow-hidden rounded-[1.6rem] border border-[rgba(var(--color-accent),0.45)] bg-[rgba(18,9,5,0.6)] px-8 py-4 text-xl font-bold text-[rgba(var(--color-accent),0.95)] shadow-2xl shadow-black/40 transition-all duration-300 hover:scale-[1.03] sm:min-w-[18rem] sm:text-2xl ${
+                    isNavigating ? 'pointer-events-none opacity-75' : ''
+                  }`}
+                  style={{ fontFamily: 'var(--font-body)', animationDelay: '0.68s' }}
+                >
+                  <span className="absolute inset-0 translate-x-[-125%] bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.2),transparent)] transition-transform duration-700 group-hover:translate-x-[125%]" />
+                  <span className="animate-accent-sweep absolute inset-y-0 left-0 w-16 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent)] opacity-70" />
+                  <span className="relative z-10">{`Continuar desde escena ${lastSceneId}`}</span>
+                </Link>
+              ) : null}
+
+              <Link
+                href="/scene/1"
+                onClick={handleStart}
+                aria-label="Empezar la historia desde la primera escena"
+                aria-disabled={isNavigating}
+                className={`button-primary btn-glow animate-hero-lift group relative inline-flex items-center justify-center gap-3 overflow-hidden rounded-[1.6rem] px-8 py-4 text-xl font-bold shadow-2xl shadow-black/45 transition-all duration-300 hover:scale-[1.03] sm:min-w-[18rem] sm:text-2xl ${
+                  isNavigating ? 'pointer-events-none opacity-75' : ''
+                }`}
+                style={{ fontFamily: 'var(--font-body)', animationDelay: '0.72s' }}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.6} d="M13 7l5 5m0 0-5 5m5-5H6" />
-              </svg>
-            </Link>
+                <span className="absolute inset-0 translate-x-[-125%] bg-[linear-gradient(110deg,transparent,rgba(255,255,255,0.3),transparent)] transition-transform duration-700 group-hover:translate-x-[125%]" />
+                <span className="animate-accent-sweep absolute inset-y-0 left-0 w-16 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.18),transparent)] opacity-70" />
+                <span className="relative z-10">Abrir el cuento</span>
+                <svg
+                  className="relative z-10 h-6 w-6 transition-transform duration-300 group-hover:translate-x-1.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.6} d="M13 7l5 5m0 0-5 5m5-5H6" />
+                </svg>
+              </Link>
+            </div>
 
             <p
               className="animate-hero-lift max-w-xs text-sm leading-relaxed text-[rgba(var(--color-accent),0.62)] sm:text-base"
@@ -149,7 +189,7 @@ export default function HomePage() {
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(var(--color-accent),0.12),transparent_58%)]" />
                 <div className="relative aspect-[4/5] overflow-hidden rounded-[1.6rem]">
                   <Image
-                    src={encodeURI('/scenes/scene-16/Reinterpretacin_moderna_y_coherente_de_un_cuento_t_62f5e3bb0d.jpeg')}
+                    src={assetPath('/scenes/scene-16/Reinterpretacin_moderna_y_coherente_de_un_cuento_t_62f5e3bb0d.jpeg')}
                     alt="Kotyhoroshko levanta la maza hacia el cielo"
                     fill
                     sizes="(min-width: 1024px) 24rem, 100vw"
@@ -176,7 +216,7 @@ export default function HomePage() {
                 <div className="animate-hero-card relative" style={{ animationDelay: `${0.62 + index * 0.16}s` }}>
                   <div className="relative aspect-[4/3] overflow-hidden rounded-[1.2rem]">
                     <Image
-                      src={encodeURI(card.src)}
+                      src={assetPath(card.src)}
                       alt={card.title}
                       fill
                       sizes="(min-width: 1024px) 16rem, 100vw"

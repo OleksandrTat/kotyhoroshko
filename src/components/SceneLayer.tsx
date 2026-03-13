@@ -1,5 +1,6 @@
 import type { ReactEventHandler, RefObject } from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 type Props = {
   src: string
@@ -34,8 +35,8 @@ export function SceneLayer({
   onLoadedMetadata,
   onTimeUpdate,
 }: Props) {
-  const normalizedSrc = encodeURI(src)
-  const normalizedPoster = poster ? encodeURI(poster) : undefined
+  const normalizedSrc = assetPath(src)
+  const normalizedPoster = poster ? assetPath(poster) : undefined
 
   if (media === 'video') {
     return (
