@@ -20,7 +20,8 @@ export function SmoothScroller() {
     connectGsapToLenis(lenis)
 
     // Exponer para uso externo si hiciera falta
-    ;(window as Window & { lenis?: Lenis }).lenis = lenis
+    const win = window as unknown as { lenis?: Lenis }
+    win.lenis = lenis
 
     // Snap suave solo cuando el scroll se detiene
     let snapTimeoutId: number | null = null
@@ -79,7 +80,7 @@ export function SmoothScroller() {
       window.removeEventListener('touchstart', handleTouchStart)
       window.removeEventListener('touchend', handleTouchEnd)
       lenis.destroy()
-      delete (window as Window & { lenis?: Lenis }).lenis
+      win.lenis = undefined
     }
   }, [])
 
