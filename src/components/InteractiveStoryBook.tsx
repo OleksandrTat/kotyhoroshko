@@ -253,9 +253,9 @@ function IntroScreen({
 }
 
 type VisualLayerRefs = {
-  background: RefObject<HTMLDivElement>
-  midground: RefObject<HTMLDivElement>
-  foreground: RefObject<HTMLDivElement>
+  background: RefObject<HTMLDivElement | null>
+  midground: RefObject<HTMLDivElement | null>
+  foreground: RefObject<HTMLDivElement | null>
 }
 
 function SceneVisual({
@@ -680,7 +680,14 @@ export function InteractiveStoryBook({ scenes }: Props) {
   const narrationAudioRef = useRef<HTMLAudioElement | null>(null)
   const narrationAbortRef = useRef<AbortController | null>(null)
   const narrationCacheRef = useRef(new Map<number, string>())
-  const swipeStateRef = useRef<{ pointerId: number; startX: number; startY: number; startTime: number } | null>(null)
+  const swipeStateRef = useRef<{
+    pointerId: number
+    startX: number
+    startY: number
+    startTime: number
+    startScrollTop: number
+  } | null>(null)
+  const wheelFallbackTimerRef = useRef<number | null>(null)
   const [activeSceneId, setActiveSceneId] = useState(1)
   const [audioEnabled, setAudioEnabled] = useState(false)
   const [activatedScenes, setActivatedScenes] = useState<Record<number, boolean>>({})
@@ -825,7 +832,7 @@ export function InteractiveStoryBook({ scenes }: Props) {
     (sceneId: number, options?: { duration?: number; immediate?: boolean; haptic?: boolean }) => {
       const index = Math.min(Math.max(sceneId, 1), scenes.length) - 1
       const target = sectionRefs.current[index]
-      if (!target || !lenisRef.current) {
+      if (!target) {
         return
       }
 
@@ -834,10 +841,23 @@ export function InteractiveStoryBook({ scenes }: Props) {
       }
 
       const targetOffset = target.offsetTop
-      lenisRef.current.scrollTo(targetOffset, {
-        duration: options?.duration ?? 0.5,
-        immediate: options?.immediate ?? false,
-      })
+      if (lenisRef.current) {
+        lenisRef.current.scrollTo(targetOffset, {
+          duration: options?.duration ?? 0.5,
+          immediate: options?.immediate ?? false,
+        })
+        return
+      }
+
+      if (containerRef.current) {
+        containerRef.current.scrollTo({
+          top: targetOffset,
+          behavior: options?.immediate ? 'auto' : 'smooth',
+        })
+        return
+      }
+
+      target.scrollIntoView({ behavior: options?.immediate ? 'auto' : 'smooth' })
     },
     [scenes.length, triggerHaptic],
   )
@@ -879,11 +899,13 @@ export function InteractiveStoryBook({ scenes }: Props) {
       return
     }
 
+    const startScrollTop = containerRef.current?.scrollTop ?? 0
     swipeStateRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
       startTime: Date.now(),
+      startScrollTop,
     }
   }, [])
 
@@ -897,7 +919,7 @@ export function InteractiveStoryBook({ scenes }: Props) {
     const deltaY = event.clientY - swipeState.startY
 
     if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 10) {
-      event.preventDefault()
+      return
     }
   }, [])
 
@@ -913,6 +935,11 @@ export function InteractiveStoryBook({ scenes }: Props) {
     const elapsed = Math.max(Date.now() - swipeState.startTime, 1)
     const velocity = Math.abs(deltaY) / elapsed
 
+    const currentScrollTop = containerRef.current?.scrollTop ?? swipeState.startScrollTop
+    const hasNativeScroll = Math.abs(currentScrollTop - swipeState.startScrollTop) > 8
+    if (hasNativeScroll) {
+      return
+    }
     if (Math.abs(deltaY) < 40 && velocity < 0.3) {
       return
     }
@@ -920,12 +947,42 @@ export function InteractiveStoryBook({ scenes }: Props) {
       return
     }
 
-    if (deltaY > 0) {
+    if (deltaY < 0) {
       scrollToScene(activeSceneId + 1, { haptic: true })
     } else {
       scrollToScene(activeSceneId - 1, { haptic: true })
     }
   }, [activeSceneId, scrollToScene])
+
+  const handleWheelFallback = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    if (showIntro) {
+      return
+    }
+    if (isInteractiveTarget(event.target) || hasOpenStoryModal()) {
+      return
+    }
+    if (Math.abs(event.deltaY) < Math.abs(event.deltaX)) {
+      return
+    }
+    const container = containerRef.current
+    if (!container) {
+      return
+    }
+
+    const startTop = container.scrollTop
+    const direction = event.deltaY > 0 ? 1 : -1
+
+    if (wheelFallbackTimerRef.current) {
+      window.clearTimeout(wheelFallbackTimerRef.current)
+    }
+
+    wheelFallbackTimerRef.current = window.setTimeout(() => {
+      const currentTop = containerRef.current?.scrollTop ?? startTop
+      if (Math.abs(currentTop - startTop) < 2) {
+        scrollToScene(activeSceneId + direction)
+      }
+    }, 160)
+  }, [activeSceneId, scrollToScene, showIntro])
 
   useEffect(() => {
     document.documentElement.dataset.storyMode = 'scroll'
@@ -944,7 +1001,7 @@ export function InteractiveStoryBook({ scenes }: Props) {
       duration: 1.2,
       snap: true,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-    })
+    } as any)
     lenisRef.current = lenis
 
     let rafId = 0
@@ -1021,6 +1078,14 @@ export function InteractiveStoryBook({ scenes }: Props) {
       window.cancelAnimationFrame(rafId)
     }
   }, [scenes.length])
+
+  useEffect(() => {
+    return () => {
+      if (wheelFallbackTimerRef.current) {
+        window.clearTimeout(wheelFallbackTimerRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (!containerRef.current) {
@@ -1360,6 +1425,7 @@ export function InteractiveStoryBook({ scenes }: Props) {
         onPointerMove={handleSwipeMove}
         onPointerUp={handleSwipeEnd}
         onPointerCancel={handleSwipeEnd}
+        onWheel={handleWheelFallback}
       >
         <MinimalHUD
           activeScene={activeSceneId}

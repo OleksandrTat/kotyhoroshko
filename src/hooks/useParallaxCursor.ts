@@ -1,8 +1,8 @@
 import { useEffect, type RefObject } from 'react'
 
 export function useParallaxCursor(
-  containerRef: RefObject<HTMLElement>,
-  layers: Array<RefObject<HTMLElement>>,
+  containerRef: RefObject<HTMLElement | null>,
+  layers: Array<RefObject<HTMLElement | null>>,
 ) {
   useEffect(() => {
     const container = containerRef.current

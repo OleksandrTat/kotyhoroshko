@@ -53,7 +53,6 @@ export function SceneLayer({
         muted={muted}
         loop={loop}
         playsInline={playsInline}
-        // @ts-expect-error - iOS Safari requires the webkit-playsinline attribute.
         webkit-playsinline={playsInline ? 'true' : undefined}
         preload={priority ? 'auto' : 'metadata'}
         poster={normalizedPoster}

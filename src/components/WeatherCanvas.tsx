@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef } from 'react'
 
@@ -35,21 +35,24 @@ export default function WeatherCanvas({ type, intensity = 0.5, color }: Props) {
       return
     }
 
+    const canvasEl = canvas
+    const ctx2d = ctx
+
     let animId = 0
     const clampedIntensity = Math.max(0, Math.min(intensity, 1))
     const count = Math.max(12, Math.floor(clampedIntensity * 180))
 
     const resize = () => {
-      canvas.width = window.innerWidth
-      canvas.height = window.innerHeight
+      canvasEl.width = window.innerWidth
+      canvasEl.height = window.innerHeight
     }
 
     resize()
     window.addEventListener('resize', resize)
 
     class RainDrop implements Particle {
-      x = Math.random() * canvas.width
-      y = Math.random() * -canvas.height
+      x = Math.random() * canvasEl.width
+      y = Math.random() * -canvasEl.height
       vx = -1.5 - Math.random() * 0.5
       vy = 14 + Math.random() * 8
       len = 14 + Math.random() * 20
@@ -61,23 +64,23 @@ export default function WeatherCanvas({ type, intensity = 0.5, color }: Props) {
       }
 
       draw() {
-        ctx.save()
-        ctx.globalAlpha = this.opacity
-        ctx.strokeStyle = color ?? 'rgba(174,210,255,0.6)'
-        ctx.lineWidth = 1
-        ctx.beginPath()
-        ctx.moveTo(this.x, this.y)
-        ctx.lineTo(this.x + this.vx * 2, this.y + this.len)
-        ctx.stroke()
-        ctx.restore()
+        ctx2d.save()
+        ctx2d.globalAlpha = this.opacity
+        ctx2d.strokeStyle = color ?? 'rgba(174,210,255,0.6)'
+        ctx2d.lineWidth = 1
+        ctx2d.beginPath()
+        ctx2d.moveTo(this.x, this.y)
+        ctx2d.lineTo(this.x + this.vx * 2, this.y + this.len)
+        ctx2d.stroke()
+        ctx2d.restore()
       }
 
       isDead() {
-        return this.y > canvas.height + 50
+        return this.y > canvasEl.height + 50
       }
 
       reset() {
-        this.x = Math.random() * canvas.width
+        this.x = Math.random() * canvasEl.width
         this.y = -50
       }
     }
@@ -85,8 +88,8 @@ export default function WeatherCanvas({ type, intensity = 0.5, color }: Props) {
     class Snowflake implements Particle {
       r = 2 + Math.random() * 5
       phase = Math.random() * Math.PI * 2
-      x = Math.random() * canvas.width
-      y = Math.random() * canvas.height
+      x = Math.random() * canvasEl.width
+      y = Math.random() * canvasEl.height
       vy = 0.8 + Math.random() * 2
       vx = -0.5 + Math.random()
 
@@ -97,20 +100,20 @@ export default function WeatherCanvas({ type, intensity = 0.5, color }: Props) {
       }
 
       draw() {
-        ctx.save()
-        ctx.fillStyle = color ?? 'rgba(255,255,255,0.85)'
-        ctx.beginPath()
-        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.restore()
+        ctx2d.save()
+        ctx2d.fillStyle = color ?? 'rgba(255,255,255,0.85)'
+        ctx2d.beginPath()
+        ctx2d.arc(this.x, this.y, this.r, 0, Math.PI * 2)
+        ctx2d.fill()
+        ctx2d.restore()
       }
 
       isDead() {
-        return this.y > canvas.height + 20
+        return this.y > canvasEl.height + 20
       }
 
       reset() {
-        this.x = Math.random() * canvas.width
+        this.x = Math.random() * canvasEl.width
         this.y = -20
       }
     }
@@ -118,8 +121,8 @@ export default function WeatherCanvas({ type, intensity = 0.5, color }: Props) {
     class Petal implements Particle {
       r = 5 + Math.random() * 9
       phase = Math.random() * Math.PI * 2
-      x = Math.random() * canvas.width
-      y = Math.random() * canvas.height
+      x = Math.random() * canvasEl.width
+      y = Math.random() * canvasEl.height
       vy = 0.6 + Math.random() * 1.2
       vx = -1 + Math.random() * 2
       rot = Math.random() * 360
@@ -132,30 +135,30 @@ export default function WeatherCanvas({ type, intensity = 0.5, color }: Props) {
       }
 
       draw() {
-        ctx.save()
-        ctx.fillStyle = color ?? 'rgba(255,182,193,0.8)'
-        ctx.translate(this.x, this.y)
-        ctx.rotate((this.rot * Math.PI) / 180)
-        ctx.beginPath()
-        ctx.ellipse(0, 0, this.r, this.r * 0.5, 0, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.restore()
+        ctx2d.save()
+        ctx2d.fillStyle = color ?? 'rgba(255,182,193,0.8)'
+        ctx2d.translate(this.x, this.y)
+        ctx2d.rotate((this.rot * Math.PI) / 180)
+        ctx2d.beginPath()
+        ctx2d.ellipse(0, 0, this.r, this.r * 0.5, 0, 0, Math.PI * 2)
+        ctx2d.fill()
+        ctx2d.restore()
       }
 
       isDead() {
-        return this.y > canvas.height + 30
+        return this.y > canvasEl.height + 30
       }
 
       reset() {
-        this.x = Math.random() * canvas.width
+        this.x = Math.random() * canvasEl.width
         this.y = -30
       }
     }
 
     class AshParticle implements Particle {
       r = 1.5 + Math.random() * 4
-      x = Math.random() * canvas.width
-      y = Math.random() * canvas.height
+      x = Math.random() * canvasEl.width
+      y = Math.random() * canvasEl.height
       vy = 0.5 + Math.random() * 1.5
       vx = -0.8 + Math.random() * 1.6
       rot = Math.random() * 360
@@ -168,21 +171,21 @@ export default function WeatherCanvas({ type, intensity = 0.5, color }: Props) {
       }
 
       draw() {
-        ctx.save()
-        ctx.globalAlpha = this.opacity
-        ctx.fillStyle = color ?? 'rgba(200,200,200,0.5)'
-        ctx.translate(this.x, this.y)
-        ctx.rotate((this.rot * Math.PI) / 180)
-        ctx.fillRect(-this.r / 2, -this.r / 2, this.r, this.r * 0.5)
-        ctx.restore()
+        ctx2d.save()
+        ctx2d.globalAlpha = this.opacity
+        ctx2d.fillStyle = color ?? 'rgba(200,200,200,0.5)'
+        ctx2d.translate(this.x, this.y)
+        ctx2d.rotate((this.rot * Math.PI) / 180)
+        ctx2d.fillRect(-this.r / 2, -this.r / 2, this.r, this.r * 0.5)
+        ctx2d.restore()
       }
 
       isDead() {
-        return this.y > canvas.height + 20
+        return this.y > canvasEl.height + 20
       }
 
       reset() {
-        this.x = Math.random() * canvas.width
+        this.x = Math.random() * canvasEl.width
         this.y = -20
       }
     }
@@ -191,8 +194,8 @@ export default function WeatherCanvas({ type, intensity = 0.5, color }: Props) {
       r = 2 + Math.random() * 4
       maxLife = 60 + Math.random() * 80
       life = 0
-      x = Math.random() * canvas.width
-      y = Math.random() * canvas.height
+      x = Math.random() * canvasEl.width
+      y = Math.random() * canvasEl.height
       vy = -0.5 - Math.random() * 1
 
       update() {
@@ -202,23 +205,23 @@ export default function WeatherCanvas({ type, intensity = 0.5, color }: Props) {
 
       draw() {
         const alpha = Math.sin((this.life / this.maxLife) * Math.PI)
-        ctx.save()
-        ctx.globalAlpha = alpha
-        ctx.fillStyle = color ?? 'rgba(244,188,85,0.9)'
-        ctx.shadowBlur = 10
-        ctx.shadowColor = color ?? 'rgba(244,188,85,0.9)'
-        ctx.beginPath()
+        ctx2d.save()
+        ctx2d.globalAlpha = alpha
+        ctx2d.fillStyle = color ?? 'rgba(244,188,85,0.9)'
+        ctx2d.shadowBlur = 10
+        ctx2d.shadowColor = color ?? 'rgba(244,188,85,0.9)'
+        ctx2d.beginPath()
         for (let i = 0; i < 4; i += 1) {
           const angle = (i * Math.PI) / 2
-          ctx.lineTo(this.x + Math.cos(angle) * this.r, this.y + Math.sin(angle) * this.r)
-          ctx.lineTo(
+          ctx2d.lineTo(this.x + Math.cos(angle) * this.r, this.y + Math.sin(angle) * this.r)
+          ctx2d.lineTo(
             this.x + Math.cos(angle + Math.PI / 4) * this.r * 0.4,
             this.y + Math.sin(angle + Math.PI / 4) * this.r * 0.4,
           )
         }
-        ctx.closePath()
-        ctx.fill()
-        ctx.restore()
+        ctx2d.closePath()
+        ctx2d.fill()
+        ctx2d.restore()
       }
 
       isDead() {
@@ -226,8 +229,8 @@ export default function WeatherCanvas({ type, intensity = 0.5, color }: Props) {
       }
 
       reset() {
-        this.x = Math.random() * canvas.width
-        this.y = Math.random() * canvas.height
+        this.x = Math.random() * canvasEl.width
+        this.y = Math.random() * canvasEl.height
         this.life = 0
       }
     }
@@ -250,7 +253,7 @@ export default function WeatherCanvas({ type, intensity = 0.5, color }: Props) {
     const particles = Array.from({ length: count }, spawn)
 
     const render = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx2d.clearRect(0, 0, canvasEl.width, canvasEl.height)
       particles.forEach((particle) => {
         particle.update()
         particle.draw()
@@ -275,3 +278,4 @@ export default function WeatherCanvas({ type, intensity = 0.5, color }: Props) {
 
   return <canvas ref={canvasRef} className="absolute inset-0 z-10 h-full w-full pointer-events-none" aria-hidden="true" />
 }
+

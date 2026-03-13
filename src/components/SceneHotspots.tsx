@@ -1,4 +1,4 @@
-'use client'
+п»ї'use client'
 
 import { useRef } from 'react'
 import { gsap } from 'gsap'
@@ -32,10 +32,12 @@ export default function SceneHotspots({
       {hotspots.map((spot, i) => (
         <button
           key={i}
-          ref={(el) => { if (el) refsMap.current.set(i, el) }}
+          ref={(el) => {
+            if (el) refsMap.current.set(i, el)
+          }}
           type="button"
           onClick={() => handleTap(i)}
-          aria-label={spot.tooltip ?? 'Торкнись мене!'}
+          aria-label={spot.tooltip ?? 'РўРѕСЂРєРЅРёСЃСЊ РјРµРЅРµ!'}
           data-cursor="hotspot"
           style={{
             position: 'absolute',
@@ -69,7 +71,7 @@ function spawnSparkles(origin: HTMLElement) {
   const rect = origin.getBoundingClientRect()
   const cx = rect.left + rect.width / 2
   const cy = rect.top + rect.height / 2
-  const emojis = ['?', '?', '??', '??']
+  const emojis = ['в­ђ', 'вњЁ', 'рџ’«', 'рџЊџ']
 
   for (let i = 0; i < 6; i++) {
     const el = document.createElement('div')
