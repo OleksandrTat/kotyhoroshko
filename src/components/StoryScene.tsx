@@ -1,10 +1,9 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { NextButton } from '@/components/NextButton'
 import { SceneContainer } from '@/components/SceneContainer'
 import { SceneLayer } from '@/components/SceneLayer'
+import { SceneEffect } from '@/components/effects/SceneEffect'
 import {
   AmbientBackdrop,
   DraggableStoryPanel,
@@ -16,25 +15,30 @@ import {
   StoryGuide,
 } from '@/components/scene'
 import { TOTAL_SCENES, type Scene } from '@/content/scenes'
-import { useSaveSceneProgress } from '@/hooks/useSceneProgress'
+import { useSceneGsap } from '@/hooks/useSceneGsap'
+
+function ScrollHint({ isLastScene }: { isLastScene: boolean }) {
+  if (isLastScene) return null
+  return (
+    <div className="absolute bottom-8 left-1/2 z-40 -translate-x-1/2 animate-bounce-slow">
+      <div className="flex flex-col items-center gap-2 text-[rgba(var(--color-accent),0.7)]">
+        <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+        <span className="text-xs uppercase tracking-[0.3em]">Sigue</span>
+      </div>
+    </div>
+  )
+}
 
 export function StoryScene({ scene }: { scene: Scene }) {
-  const router = useRouter()
   const [textVisible, setTextVisible] = useState(false)
   const [guideMessage, setGuideMessage] = useState<string | null>(null)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const sceneContainerRef = useRef<HTMLDivElement>(null)
   const parallaxRef = useRef<HTMLDivElement>(null)
 
-  useSaveSceneProgress(scene.id)
-
-  useEffect(() => {
-    if (scene.id > 1) {
-      router.prefetch(`/scene/${scene.id - 1}`)
-    }
-    if (scene.id < TOTAL_SCENES) {
-      router.prefetch(`/scene/${scene.id + 1}`)
-    }
-  }, [scene.id, router])
+  useSceneGsap(scene, sceneContainerRef)
 
   useEffect(() => {
     const timer = window.setTimeout(() => setTextVisible(true), 180)
@@ -166,7 +170,7 @@ export function StoryScene({ scene }: { scene: Scene }) {
 
   return (
     <SceneContainer>
-      <div className="absolute inset-0 overflow-hidden">
+      <div ref={sceneContainerRef} className="absolute inset-0 overflow-hidden">
         <AmbientBackdrop theme={scene.theme} />
         <SceneMotes theme={scene.theme} />
 
@@ -212,6 +216,8 @@ export function StoryScene({ scene }: { scene: Scene }) {
           <InteractiveVideoLayer scene={scene} prefersReducedMotion={prefersReducedMotion} />
         ) : null}
 
+        <SceneEffect theme={scene.theme} />
+
         <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-[rgba(8,7,7,0.96)] via-[rgba(20,14,10,0.38)] to-[rgba(12,10,9,0.08)]" />
         <div className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_22%_18%,rgba(var(--color-accent),0.12),transparent_38%)]" />
         <div className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_78%_82%,rgba(var(--color-primary),0.1),transparent_44%)]" />
@@ -235,12 +241,7 @@ export function StoryScene({ scene }: { scene: Scene }) {
           style={{ width: `${progressValue}%` }}
         />
       </div>
-
-      {scene.id < TOTAL_SCENES ? (
-        <NextButton nextSceneId={scene.id + 1} />
-      ) : (
-        <NextButton href="/" label="Volver al inicio" direction="backward" />
-      )}
+      <ScrollHint isLastScene={scene.id >= TOTAL_SCENES} />
     </SceneContainer>
   )
 }

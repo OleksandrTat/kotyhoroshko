@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { VideoGame } from '@/content/scenes'
 import { GameShell } from './GameShell'
+import { sfx } from '@/lib/sfx'
 
 type HoldGame = Extract<VideoGame, { type: 'hold' }>
 
@@ -38,6 +39,8 @@ export function HoldGame({
     if (!isDone) return
     if (completeRef.current) return
     completeRef.current = true
+
+    sfx.play('success')
 
     const timeoutId = window.setTimeout(() => {
       onComplete()

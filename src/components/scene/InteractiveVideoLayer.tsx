@@ -19,19 +19,17 @@ export function InteractiveVideoLayer({
   const game = scene.videoGame
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const introPausedRef = useRef(false)
+  const completedRef = useRef(false)
   const [challengeKey, setChallengeKey] = useState(0)
   const [videoStage, setVideoStage] = useState<VideoStage>('intro')
 
   const playVideo = useCallback(() => {
     const video = videoRef.current
     if (!video) {
-      return
+      return null
     }
 
-    const playPromise = video.play()
-    if (playPromise) {
-      playPromise.catch(() => {})
-    }
+    return video.play()
   }, [])
 
   const handleLoadedMetadata = useCallback(() => {
@@ -42,6 +40,20 @@ export function InteractiveVideoLayer({
 
     introPausedRef.current = false
     video.currentTime = 0
+
+    if (!game || completedRef.current) {
+      setVideoStage('playing')
+      if (prefersReducedMotion) {
+        video.pause()
+        return
+      }
+      const playPromise = playVideo()
+      if (playPromise) {
+        playPromise.catch(() => {})
+      }
+      return
+    }
+
     setVideoStage(prefersReducedMotion ? 'challenge' : 'intro')
 
     if (prefersReducedMotion) {
@@ -49,12 +61,19 @@ export function InteractiveVideoLayer({
       return
     }
 
-    playVideo()
-  }, [playVideo, prefersReducedMotion])
+    const playPromise = playVideo()
+    if (playPromise) {
+      playPromise.catch(() => {
+        if (!completedRef.current) {
+          setVideoStage('challenge')
+        }
+      })
+    }
+  }, [game, playVideo, prefersReducedMotion])
 
   const handleTimeUpdate = useCallback(() => {
     const video = videoRef.current
-    if (!video || videoStage !== 'intro' || introPausedRef.current) {
+    if (!video || !game || completedRef.current || videoStage !== 'intro' || introPausedRef.current) {
       return
     }
 
@@ -72,13 +91,18 @@ export function InteractiveVideoLayer({
       video.pause()
     }
 
+    completedRef.current = false
     setChallengeKey((current) => current + 1)
     setVideoStage('challenge')
   }, [])
 
   const handleCloseChallenge = useCallback(() => {
+    completedRef.current = true
     setVideoStage('playing')
-    playVideo()
+    const playPromise = playVideo()
+    if (playPromise) {
+      playPromise.catch(() => {})
+    }
   }, [playVideo])
 
   return (
@@ -89,7 +113,7 @@ export function InteractiveVideoLayer({
         poster={media.poster}
         alt={media.alt}
         className="z-10 scale-[1.03] animate-fade-in-slow"
-        autoPlay={false}
+        autoPlay={!prefersReducedMotion}
         loop
         priority
         videoRef={videoRef}
@@ -104,8 +128,12 @@ export function InteractiveVideoLayer({
           onRestart={handleRestartChallenge}
           onClose={handleCloseChallenge}
           onComplete={() => {
+            completedRef.current = true
             setVideoStage('playing')
-            playVideo()
+            const playPromise = playVideo()
+            if (playPromise) {
+              playPromise.catch(() => {})
+            }
           }}
         />
       ) : null}

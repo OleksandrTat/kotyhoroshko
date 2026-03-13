@@ -48,6 +48,17 @@ body {
   overflow-x: hidden;
 }
 
+html {
+  scroll-snap-type: y mandatory;
+  scroll-behavior: auto;
+}
+
+section[id^="scene-"] {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow: hidden;
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display), cursive;
   letter-spacing: -0.02em;

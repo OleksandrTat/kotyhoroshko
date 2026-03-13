@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPoi
 import type { VideoGame } from '@/content/scenes'
 import { GameShell } from './GameShell'
 import { distanceBetween, type GamePoint, toViewBoxPoint } from './gameUtils'
+import { sfx } from '@/lib/sfx'
 
 type DragGame = Extract<VideoGame, { type: 'drag' }>
 
@@ -40,6 +41,8 @@ export function DragGame({
     if (!isDone) return
     if (completeRef.current) return
     completeRef.current = true
+
+    sfx.play('success')
 
     const timeoutId = window.setTimeout(() => {
       onComplete()

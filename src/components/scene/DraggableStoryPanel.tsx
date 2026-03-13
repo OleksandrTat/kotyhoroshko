@@ -93,6 +93,7 @@ export function DraggableStoryPanel({
   return (
     <div
       ref={panelRef}
+      data-gsap="story-panel"
       className={`absolute bottom-[calc(6.7rem+env(safe-area-inset-bottom))] left-[calc(1rem+env(safe-area-inset-left))] right-[calc(1rem+env(safe-area-inset-right))] z-[26] transition-all duration-700 sm:left-[calc(1.5rem+env(safe-area-inset-left))] sm:right-[calc(1.5rem+env(safe-area-inset-right))] ${position ? '' : alignedClass} ${
         visible ? 'animate-panel-rise opacity-100' : 'translate-y-8 opacity-0'
       }`}
@@ -127,8 +128,12 @@ export function DraggableStoryPanel({
         </div>
 
         <div className="story-scroll-mask relative mt-5 max-h-[min(42svh,25rem)] space-y-4 overflow-y-auto pr-2">
-          {scene.text.map((paragraph) => (
-            <p key={paragraph} className="story-text text-left font-medium text-[rgba(var(--color-accent),0.95)]">
+          {scene.text.map((paragraph, index) => (
+            <p
+              key={paragraph}
+              data-gsap={`story-text-${index}`}
+              className="story-text text-left font-medium text-[rgba(var(--color-accent),0.95)]"
+            >
               {paragraph}
             </p>
           ))}

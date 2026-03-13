@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPoi
 import type { VideoGame } from '@/content/scenes'
 import { GameShell } from './GameShell'
 import { distanceBetween, distanceToSegment, getNormalizedPoint, type GamePoint, toViewBoxPoint } from './gameUtils'
+import { sfx } from '@/lib/sfx'
 
 type TrailGame = Extract<VideoGame, { type: 'trail' }>
 
@@ -39,6 +40,8 @@ export function TrailGame({
     if (!isDone) return
     if (completeRef.current) return
     completeRef.current = true
+
+    sfx.play('success')
 
     const timeoutId = window.setTimeout(() => {
       onComplete()

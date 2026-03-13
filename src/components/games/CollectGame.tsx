@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { VideoGame } from '@/content/scenes'
 import { GameShell } from './GameShell'
 import { clampValue } from './gameUtils'
+import { sfx } from '@/lib/sfx'
 
 type CollectGame = Extract<VideoGame, { type: 'collect' }>
 
@@ -55,6 +56,8 @@ export function CollectGame({
     if (!isDone) return
     if (completeRef.current) return
     completeRef.current = true
+
+    sfx.play('success')
 
     const timeoutId = window.setTimeout(() => {
       onComplete()

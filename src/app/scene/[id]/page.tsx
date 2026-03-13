@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
-import { StoryScene } from '@/components/StoryScene'
+import { notFound, redirect } from 'next/navigation'
 import { TOTAL_SCENES, getSceneById } from '@/content/scenes'
 
 type PageProps = {
@@ -61,5 +60,5 @@ export default async function ScenePage({ params }: PageProps) {
     notFound()
   }
 
-  return <StoryScene scene={scene} />
+  redirect(`/#scene-${sceneId}`)
 }
