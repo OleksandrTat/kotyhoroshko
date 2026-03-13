@@ -37,24 +37,12 @@ export function NarratorBubble({ scene }: { scene: Scene }) {
   const line = NARRATOR_LINES[scene.id]
 
   useEffect(() => {
-    const bubble = bubbleRef.current
-    if (!bubble) return
-
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-    if (!prefersReducedMotion) {
-      gsap.fromTo(
-        bubble,
-        { scale: 0, opacity: 0, transformOrigin: 'bottom left' },
-        { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.7)', delay: 1.2 },
-      )
-    } else {
-      bubble.style.opacity = '1'
-      bubble.style.transform = 'none'
-    }
-
     const timer = window.setTimeout(() => {
-      if (!prefersReducedMotion) {
+      const bubble = bubbleRef.current
+      if (!bubble) return
+
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      if (!prefersReduced) {
         gsap.to(bubble, { scale: 0, opacity: 0, duration: 0.4, ease: 'back.in(1.7)' })
       } else {
         bubble.style.opacity = '0'
@@ -69,6 +57,7 @@ export function NarratorBubble({ scene }: { scene: Scene }) {
   return (
     <div
       ref={bubbleRef}
+      data-gsap="narrator"
       className="absolute bottom-[calc(5rem+env(safe-area-inset-bottom))] left-[calc(1.5rem+env(safe-area-inset-left))] z-[45] flex items-end gap-3"
       aria-live="polite"
     >

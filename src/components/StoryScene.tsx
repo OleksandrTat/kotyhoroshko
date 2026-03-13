@@ -11,11 +11,12 @@ import {
   SceneHud,
   SceneJourney,
   SceneMotes,
+  SceneRevealOverlay,
   SceneTitleReveal,
   StoryGuide,
 } from '@/components/scene'
 import { TOTAL_SCENES, type Scene } from '@/content/scenes'
-import { useSceneGsap } from '@/hooks/useSceneGsap'
+import { useSceneEntrance } from '@/hooks/useSceneEntrance'
 
 function ScrollHint({ isLastScene }: { isLastScene: boolean }) {
   if (isLastScene) return null
@@ -32,18 +33,12 @@ function ScrollHint({ isLastScene }: { isLastScene: boolean }) {
 }
 
 export function StoryScene({ scene }: { scene: Scene }) {
-  const [textVisible, setTextVisible] = useState(false)
   const [guideMessage, setGuideMessage] = useState<string | null>(null)
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
-  const sceneContainerRef = useRef<HTMLDivElement>(null)
+  const entranceContainerRef = useRef<HTMLDivElement>(null)
   const parallaxRef = useRef<HTMLDivElement>(null)
 
-  useSceneGsap(scene, sceneContainerRef)
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => setTextVisible(true), 180)
-    return () => window.clearTimeout(timer)
-  }, [scene.id])
+  useSceneEntrance(scene, entranceContainerRef)
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -170,78 +165,82 @@ export function StoryScene({ scene }: { scene: Scene }) {
 
   return (
     <SceneContainer>
-      <div ref={sceneContainerRef} className="absolute inset-0 overflow-hidden">
-        <AmbientBackdrop theme={scene.theme} />
-        <SceneMotes theme={scene.theme} />
+      <div ref={entranceContainerRef} className="absolute inset-0">
+        <div className="absolute inset-0 overflow-hidden">
+          <AmbientBackdrop theme={scene.theme} />
+          <SceneMotes theme={scene.theme} />
 
-        {scene.media.kind === 'layered' ? (
-          <div ref={parallaxRef} className="parallax-root absolute inset-0 z-10">
-            <div className="parallax-layer-back absolute inset-0">
-              <SceneLayer
-                src={scene.media.background}
-                alt={scene.media.altBackground}
-                className="animate-ken-burns"
-                priority
-              />
+          {scene.media.kind === 'layered' ? (
+            <div ref={parallaxRef} data-gsap="bg-image" className="parallax-root absolute inset-0 z-10">
+              <div className="parallax-layer-back absolute inset-0">
+                <SceneLayer
+                  src={scene.media.background}
+                  alt={scene.media.altBackground}
+                  className="animate-ken-burns"
+                  priority
+                />
+              </div>
+              <div className="parallax-layer-mid absolute inset-0">
+                <SceneLayer
+                  src={scene.media.midground}
+                  alt={scene.media.altMidground}
+                  className="animate-fade-in-slow"
+                  priority
+                />
+              </div>
+              <div className="parallax-layer-front absolute inset-0">
+                <SceneLayer
+                  src={scene.media.foreground}
+                  alt={scene.media.altForeground}
+                  className="animate-fade-in-slow drop-shadow-[0_20px_44px_rgba(0,0,0,0.48)]"
+                  priority
+                />
+              </div>
             </div>
-            <div className="parallax-layer-mid absolute inset-0">
-              <SceneLayer
-                src={scene.media.midground}
-                alt={scene.media.altMidground}
-                className="animate-fade-in-slow"
-                priority
-              />
-            </div>
-            <div className="parallax-layer-front absolute inset-0">
-              <SceneLayer
-                src={scene.media.foreground}
-                alt={scene.media.altForeground}
-                className="animate-fade-in-slow drop-shadow-[0_20px_44px_rgba(0,0,0,0.48)]"
-                priority
-              />
-            </div>
-          </div>
-        ) : null}
+          ) : null}
 
-        {scene.media.kind === 'image' ? (
-          <SceneLayer
-            src={scene.media.src}
-            alt={scene.media.alt}
-            className="z-10 scale-[1.03] animate-ken-burns"
-            priority
+          {scene.media.kind === 'image' ? (
+            <div data-gsap="bg-image" className="absolute inset-0 z-10">
+              <SceneLayer
+                src={scene.media.src}
+                alt={scene.media.alt}
+                priority
+              />
+            </div>
+          ) : null}
+
+          {scene.media.kind === 'video' ? (
+            <InteractiveVideoLayer scene={scene} prefersReducedMotion={prefersReducedMotion} />
+          ) : null}
+
+          <SceneEffect theme={scene.theme} />
+
+          <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-[rgba(8,7,7,0.96)] via-[rgba(20,14,10,0.38)] to-[rgba(12,10,9,0.08)]" />
+          <div className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_22%_18%,rgba(var(--color-accent),0.12),transparent_38%)]" />
+          <div className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_78%_82%,rgba(var(--color-primary),0.1),transparent_44%)]" />
+        </div>
+
+        <SceneHud scene={scene} progressValue={progressValue} />
+        <SceneTitleReveal key={`title-${scene.id}`} scene={scene} visible={!prefersReducedMotion} />
+
+        <DraggableStoryPanel scene={scene} />
+        {guideMessage ? <StoryGuide message={guideMessage} onDismiss={() => setGuideMessage(null)} /> : null}
+        <SceneJourney scene={scene} progressValue={progressValue} />
+
+        <div className="absolute bottom-0 left-0 right-0 z-[32] h-2 bg-[rgba(18,11,7,0.7)] backdrop-blur-sm">
+          <div
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(progressValue)}
+            aria-label={progressLabel}
+            className="animate-progress h-full bg-[linear-gradient(to_right,rgba(var(--color-secondary),0.96),rgba(var(--color-primary),0.98),rgba(var(--color-secondary),0.96))]"
+            style={{ width: `${progressValue}%` }}
           />
-        ) : null}
-
-        {scene.media.kind === 'video' ? (
-          <InteractiveVideoLayer scene={scene} prefersReducedMotion={prefersReducedMotion} />
-        ) : null}
-
-        <SceneEffect theme={scene.theme} />
-
-        <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-[rgba(8,7,7,0.96)] via-[rgba(20,14,10,0.38)] to-[rgba(12,10,9,0.08)]" />
-        <div className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_22%_18%,rgba(var(--color-accent),0.12),transparent_38%)]" />
-        <div className="pointer-events-none absolute inset-0 z-20 bg-[radial-gradient(circle_at_78%_82%,rgba(var(--color-primary),0.1),transparent_44%)]" />
+        </div>
+        <ScrollHint isLastScene={scene.id >= TOTAL_SCENES} />
+        <SceneRevealOverlay theme={scene.theme} />
       </div>
-
-      <SceneHud scene={scene} progressValue={progressValue} />
-      <SceneTitleReveal key={`title-${scene.id}`} scene={scene} visible={!prefersReducedMotion} />
-
-      <DraggableStoryPanel scene={scene} visible={textVisible} />
-      {guideMessage ? <StoryGuide message={guideMessage} onDismiss={() => setGuideMessage(null)} /> : null}
-      <SceneJourney scene={scene} progressValue={progressValue} />
-
-      <div className="absolute bottom-0 left-0 right-0 z-[32] h-2 bg-[rgba(18,11,7,0.7)] backdrop-blur-sm">
-        <div
-          role="progressbar"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={Math.round(progressValue)}
-          aria-label={progressLabel}
-          className="animate-progress h-full bg-[linear-gradient(to_right,rgba(var(--color-secondary),0.96),rgba(var(--color-primary),0.98),rgba(var(--color-secondary),0.96))]"
-          style={{ width: `${progressValue}%` }}
-        />
-      </div>
-      <ScrollHint isLastScene={scene.id >= TOTAL_SCENES} />
     </SceneContainer>
   )
 }

@@ -6,10 +6,9 @@ import { THEME_META } from './sceneMeta'
 
 export function DraggableStoryPanel({
   scene,
-  visible,
 }: {
   scene: Scene
-  visible: boolean
+  visible?: boolean
 }) {
   const meta = THEME_META[scene.theme]
   const panelRef = useRef<HTMLDivElement>(null)
@@ -94,9 +93,7 @@ export function DraggableStoryPanel({
     <div
       ref={panelRef}
       data-gsap="story-panel"
-      className={`absolute bottom-[calc(6.7rem+env(safe-area-inset-bottom))] left-[calc(1rem+env(safe-area-inset-left))] right-[calc(1rem+env(safe-area-inset-right))] z-[26] transition-all duration-700 sm:left-[calc(1.5rem+env(safe-area-inset-left))] sm:right-[calc(1.5rem+env(safe-area-inset-right))] ${position ? '' : alignedClass} ${
-        visible ? 'animate-panel-rise opacity-100' : 'translate-y-8 opacity-0'
-      }`}
+      className={`absolute bottom-[calc(6.7rem+env(safe-area-inset-bottom))] left-[calc(1rem+env(safe-area-inset-left))] right-[calc(1rem+env(safe-area-inset-right))] z-[26] sm:left-[calc(1.5rem+env(safe-area-inset-left))] sm:right-[calc(1.5rem+env(safe-area-inset-right))] ${position ? '' : alignedClass}`}
       style={position ? { left: `${position.x}px`, top: `${position.y}px`, right: 'auto', bottom: 'auto', width: 'min(92vw, 32rem)' } : undefined}
     >
       <div className={`story-panel depth-shadow relative rounded-[2rem] border border-[rgba(var(--color-accent),0.28)] bg-[linear-gradient(145deg,rgba(26,14,10,0.9),rgba(11,6,4,0.92))] p-5 sm:p-6 md:p-7 ${isDragging ? 'shadow-[0_34px_90px_rgba(0,0,0,0.62)]' : ''}`}>

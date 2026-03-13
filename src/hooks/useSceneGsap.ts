@@ -4,6 +4,9 @@ import { useEffect, useRef } from 'react'
 import { gsap, ScrollTrigger } from '@/lib/gsapSetup'
 import type { Scene } from '@/content/scenes'
 
+// DEPRECATED: replaced by useSceneEntrance.ts
+// which uses IntersectionObserver instead of ScrollTrigger
+// (ScrollTrigger does not fire reliably inside scroll-snap)
 export function useSceneGsap(scene: Scene, containerRef: React.RefObject<HTMLElement | null>) {
   const timelineRef = useRef<gsap.core.Timeline | null>(null)
 

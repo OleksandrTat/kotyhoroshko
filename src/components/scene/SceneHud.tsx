@@ -13,7 +13,7 @@ export const SceneHud = React.memo(function SceneHud({
   const isInteractive = scene.media.kind === 'video' && Boolean(scene.videoGame)
 
   return (
-    <div data-gsap="hud" className="absolute left-[calc(1rem+env(safe-area-inset-left))] top-[calc(1rem+env(safe-area-inset-top))] z-40 flex max-w-[min(28rem,calc(100vw-8.5rem))] animate-hud-slide flex-col gap-3">
+    <div data-gsap="hud" className="absolute left-[calc(1rem+env(safe-area-inset-left))] top-[calc(1rem+env(safe-area-inset-top))] z-40 flex max-w-[min(28rem,calc(100vw-8.5rem))] flex-col gap-3">
       <div className="glass-panel rounded-[1.5rem] px-4 py-3">
         <div className="flex items-start gap-3">
           <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[rgba(var(--color-accent),0.42)] bg-[rgba(var(--color-secondary),0.2)] text-lg font-bold text-[rgba(var(--color-accent),0.96)]">

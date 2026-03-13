@@ -107,19 +107,20 @@ export function InteractiveVideoLayer({
 
   return (
     <>
-      <SceneLayer
-        media="video"
-        src={media.src}
-        poster={media.poster}
-        alt={media.alt}
-        className="z-10 scale-[1.03] animate-fade-in-slow"
-        autoPlay={!prefersReducedMotion}
-        loop
-        priority
-        videoRef={videoRef}
-        onLoadedMetadata={handleLoadedMetadata}
-        onTimeUpdate={handleTimeUpdate}
-      />
+      <div data-gsap="bg-image" className="absolute inset-0 z-10">
+        <SceneLayer
+          media="video"
+          src={media.src}
+          poster={media.poster}
+          alt={media.alt}
+          autoPlay={!prefersReducedMotion}
+          loop
+          priority
+          videoRef={videoRef}
+          onLoadedMetadata={handleLoadedMetadata}
+          onTimeUpdate={handleTimeUpdate}
+        />
+      </div>
 
       {game && videoStage === 'challenge' ? (
         <VideoChallengeOverlay
