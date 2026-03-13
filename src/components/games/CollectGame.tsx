@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { VideoGame } from '@/content/scenes'
 import { GameShell } from './GameShell'
 import { clampValue } from './gameUtils'
@@ -100,7 +100,7 @@ export function CollectGame({
   }, [isDone, onComplete])
 
   // ─── Atrapar una luz ──────────────────────────────────────────────────────
-  const handleCollect = useCallback((index: number, event: ReactPointerEvent<HTMLButtonElement>) => {
+  const handleCollect = useCallback((index: number, event: React.PointerEvent<HTMLButtonElement>) => {
     setCollected((prev) => (prev.includes(index) ? prev : [...prev, index]))
 
     // Mensaje de ánimo aleatorio

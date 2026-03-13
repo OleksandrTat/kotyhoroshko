@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { VideoGame } from '@/content/scenes'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 import { CollectGame } from './CollectGame'
@@ -22,7 +22,6 @@ export function VideoChallengeOverlay({
 }) {
   const focusRef = useFocusTrap<HTMLDivElement>(true)
   const [showConfetti, setShowConfetti] = useState(false)
-  const completeTimerRef = useRef<number | null>(null)
 
   // Envuelve onComplete para disparar confeti antes de cerrar
   const handleComplete = () => {
@@ -31,23 +30,15 @@ export function VideoChallengeOverlay({
       setShowConfetti(true)
     }
     const delay = prefersReduced ? 0 : 1400
-    if (completeTimerRef.current) {
-      window.clearTimeout(completeTimerRef.current)
-    }
     // Dar tiempo al confeti antes de llamar al padre
-    completeTimerRef.current = window.setTimeout(() => {
+    window.setTimeout(() => {
       setShowConfetti(false)
       onComplete()
-      completeTimerRef.current = null
     }, delay)
   }
 
   // Limpiar confeti si se cierra a mano
   const handleClose = () => {
-    if (completeTimerRef.current) {
-      window.clearTimeout(completeTimerRef.current)
-      completeTimerRef.current = null
-    }
     setShowConfetti(false)
     onClose()
   }
@@ -59,13 +50,7 @@ export function VideoChallengeOverlay({
       handleClose()
     }
     window.addEventListener('keydown', handleKeyDown)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-      if (completeTimerRef.current) {
-        window.clearTimeout(completeTimerRef.current)
-        completeTimerRef.current = null
-      }
-    }
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
   return (
